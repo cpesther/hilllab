@@ -7,5 +7,5 @@ specific to any certain assay.
 """
 
 from .plot_component_trace import plot_component_trace
-from .plot_xy import plot_xy_beads
-from .plot_xy_maximize import plot_xy_beads_maximize
+from .plot_xy import plot_xy
+from .plot_xy_maximize import plot_xy_maximize

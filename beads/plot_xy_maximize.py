@@ -6,7 +6,7 @@ from scipy.io import loadmat
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_xy_beads_maximize(path, save=False, label_beads=True):
+def plot_xy_maximize(path, save=False, label_beads=True):
 
     """
     Plots the maximized XY position of every bead in a VRPN file. If a 
@@ -29,7 +29,7 @@ def plot_xy_beads_maximize(path, save=False, label_beads=True):
         all_files = [os.path.join(path, file) for file in Path(path).glob('*.vrpn.mat')]
         print(f'Plotting beads for {len(all_files)} file(s).')
     else:
-        print('ERROR: Path does not exist or is not a regular file/folder.')
+        print('ERROR: Path does not exist or is not a regular file/folder')
 
 
     # Iterate over each video and plot each bead
