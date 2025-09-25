@@ -1,6 +1,8 @@
 # Christopher Esther, Hill Lab, 8/15/2025
 import os
 import time
+import platform
+from datetime import datetime
 
 from tkinter import filedialog
 from IPython.display import clear_output
@@ -11,8 +13,8 @@ import trackpy as tp  # for particle tracking
 import pims  # python image sequence library for manipulating videos
 
 def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21, 
-                     trajectory_fraction=1.0, max_travel_pixels=5, memory=0, 
-                     performance_mode='safe'):
+                     trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
+                     invert=False, performance_mode='safe'):
 
     """
     Automatically processes and tracks particles in a batch of AVI 
@@ -37,6 +39,9 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         memory (int, optional): Memory parameter for TrackPy's linking, 
             specifying how long particles are remembered between frames. 
             Default is 0.
+        invert (bool, optional): when false, bright spots on a dark background
+            will be tracked. When true, dark spots on a bright background
+            will be tracked. 
         performance_mode (string, 'safe', 'slow', or 'fast'): Controls 
             how many processes are used by TrackPy to allow this task to
             be run safely in the background or sped up on demand. 
@@ -68,11 +73,18 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
     # Calculate total number of files and print some messages
     nfiles = len(flist)
 
+    # Set some invert text
+    if invert:
+        tracking_text = 'Dark spots on a white background'
+    else:
+        tracking_text = 'Bright spots on a black background'
+
     # Print out these paths and the input variables and require confirmation
     print('Please confirm the parameters below:')
     print(f'Input Folder:    {video_dir}')
     print(f'Output Folder:   {save_dir}')
     print(f'Bead Size:       {bead_size_pixels} pixels')
+    print(f'Bead Color:      {tracking_text}')
     print(f'Videos Found:    {nfiles}')
 
     confirmation = input('\nAre the values correct? (y/n):')
@@ -123,7 +135,7 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         # Track the video
         minmass_value = 750 * (bead_size_pixels / 21) ** 3
         particle_positions = tp.batch(fv, bead_size_pixels, 
-            minmass=minmass_value, processes=int(num_processes))
+            minmass=minmass_value, processes=int(num_processes), invert=invert)
 
         # Once finished tracking, display the time taken
         total_track_time = (time.time() - track_start_time)
@@ -194,7 +206,7 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         # set the required seconds and microseconds fields to zero. The
         # PLACEHOLDER value is also used to populate some extra columns
         # in the VRPN format that we don't need to use (Z, roll, pitch, yaw)
-        SEC = 0
+        SEC = 0     
         USEC = 0
         PLACEHOLDER = [0, 0, 0, 0]
 
@@ -210,7 +222,7 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
 
         # Here's where we iteratively add the data from the trackpy DFs 
         # into the big array.
-        print(f'Building VRPN')
+        print(f'Building VRPN...')
         vrpn_index = 0  # counter value used for tracking the row index in the VRPN file
 
         # For every frame in the dataset 
@@ -237,7 +249,7 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         # We'll create this little key in case anyone needs to manually
         # explore the VRPN structure later on
         reference = {
-            'Column 1': 'Seconds (unused)',
+            'Column 1': 'Timestamp (seconds since epoch)',
             'Column 2': 'Microseconds (unused)',
             'Column 3': 'Particle Index',
             'Column 4': 'Frame Number',
@@ -249,9 +261,25 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
             'Column 10': 'Yaw (unused)',
         }
         reference_df = pd.DataFrame(list(reference.items()), columns=["Column", "Description"])
+
+        # Store some information about the computer and script
+        from .. import __version__
+        system_info = {
+            "File Tracked": str(datetime.now().replace(microsecond=0)),
+            "OS": platform.system(),
+            "OS Version": platform.version(),
+            "Machine": platform.machine(),
+            "Processor": platform.processor(),
+            "Node Name": platform.node(),
+            "Python Version": platform.python_version(),
+            "hilllab Module Version": __version__
+        }
+        system_info_df = pd.DataFrame(list(system_info.items()), columns=["Item", "Value"])
+
         info = {'vrpnLogToMatlabVersion': '05.00',
                 'matOutputFileName': f'{file}.vrpn.mat',
-                'reference': reference_df}
+                'reference': reference_df,
+                'systemInfo': system_info_df}
         
         # Package the data into a nested dictionary structure expected 
         # by the VRPN MATLAB parser, including both metadata and tracking data.
@@ -280,4 +308,4 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
     print(f'Finished processing all files in {video_dir}')
     
     total_batch_time = time.time() - batch_start_time
-    print(f'Finished processing batch in {total_batch_time / 60} minutes')
+    print(f'Finished processing batch in {round(total_batch_time / 60, 2)} minutes')

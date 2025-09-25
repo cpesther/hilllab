@@ -207,7 +207,6 @@ def _plate_profile_curve(values, plot=False):
 
     # Return a plot, if requested
     if plot:
-        t_pars = np.transpose(pars)
         plt.plot(values, c='magenta')
         y_fit = all_y_fits[peak_index] * max(values)  # un-normalize the y-fit
         plt.plot(np.arange(peak_index, 8, 1), y_fit, c='blue')

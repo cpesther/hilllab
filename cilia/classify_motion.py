@@ -24,6 +24,7 @@ def classify_motion(path, plot=False, save=False, label_beads=True):
     
     # Load the data and isolate the components
     data = pd.DataFrame(loadmat(path)['tracking']['spot3DSecUsecIndexFramenumXYZRPY'][0][0])
+    clean_data = data[~np.isnan(data[4])]  # remove NaNs
     all_beads = np.unique(data[2]).astype(int)
     classifications = pd.DataFrame(columns=['bead', 'transporting'])
     
@@ -31,10 +32,9 @@ def classify_motion(path, plot=False, save=False, label_beads=True):
         fig, ax = plt.subplots(figsize=(12, 8))
     
     for bead in all_beads:
-        bead_data = data[data[2] == bead]
-        clean_bead_data = bead_data[~np.isnan(bead_data[4])]  # remove NaNs
-        x = np.array(clean_bead_data[4])
-        y = np.array(clean_bead_data[5])
+        bead_data = clean_data[clean_data[2] == bead]
+        x = np.array(bead_data[4])
+        y = np.array(bead_data[5])
         
         # Calculate a few parameters that will help us determine whether the motion state
         # Net displacement
@@ -52,8 +52,8 @@ def classify_motion(path, plot=False, save=False, label_beads=True):
         rg = np.sqrt(np.mean((x - x_mean)**2 + (y - y_mean)**2))
         
         # Do the actual classification here
-        straightness_thresh = 0.1
-        rg_thresh = 4
+        straightness_thresh = 0.07
+        rg_thresh = 3
         if straightness > straightness_thresh and rg > rg_thresh:
             transporting = True
             plot_color = 'green'
@@ -62,11 +62,11 @@ def classify_motion(path, plot=False, save=False, label_beads=True):
             plot_color = 'red'
     
         if plot:
-            ax.plot(clean_bead_data[4], clean_bead_data[5], color=plot_color)
+            ax.plot(bead_data[4], bead_data[5], color=plot_color)
     
             # Add index label to beads, if requested
             if label_beads:
-                start_cords = clean_bead_data.iloc[0]
+                start_cords = bead_data.iloc[0]
                 ax.text(start_cords[4], start_cords[5], str(int(bead)), fontsize=8)
 
             # Save plot if requested
@@ -78,7 +78,7 @@ def classify_motion(path, plot=False, save=False, label_beads=True):
         classifications.loc[len(classifications)] = [bead, transporting]
     
     if not plot:
-        return classifications
+        return classifications, clean_data
     else:
         # Add in the stuff to make the graph pretty
         ax.set(xlabel='X Position (pixels)', ylabel='Y Position (pixels)')

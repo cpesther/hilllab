@@ -1,12 +1,10 @@
 # Christopher Esther, Hill Lab, 8/21/2025
-
 # This class is used by the various migration assay functions so that 
 # they can easily pass lots of data around without needing an exorbatant
 # number of individual variables and returns. It's basically just a 
 # container to keep everything organized. 
 
 import pandas as pd
-
 
 class Bundle():
 
@@ -18,7 +16,7 @@ class Bundle():
         self.results = Results()  # calculated results values
 
 
-    def _load_read(self, read_number, type):
+    def _load_read(self, read_number, type='clean'):
 
         """
         This is a simple function that pulls one read of data (16 rows 
@@ -70,31 +68,28 @@ class Data():
         self.num_columns = 0
         self.num_rows = 0
         self.num_reads = 0
+        self.overflow_meta = 'No overflow metadata available'
 
         # Here are the dataframes containing the actual experimental data
-        self.raw = 'No raw data available'  # placeholder values until assigned
+        self.raw = 'No raw data available'  # placeholders until assigned
         self.normalized = 'No normalized data available'
         self.clean = 'No clean data available'
         self.average = 'No average data available'
 
         # Dataframes containing peak profiling and adjustment data
-        self.ppd_peaks_raw = pd.DataFrame()
-        self.ppd_peaks_final = pd.DataFrame()
+        self.peaks_raw = pd.DataFrame()
+        self.peaks_final = pd.DataFrame()
 
         # Tables containing Gaussian range locazliation data
-        self.ppd_gaussian_ranges_raw = pd.DataFrame()
-        self.ppd_gaussian_ranges_final = pd.DataFrame()
-
-        # The overflow logging table
-        self.overflow_meta = 'No overflow metadata available'
+        self.ranges_raw = pd.DataFrame()
+        self.ranges_final = pd.DataFrame()
         
         # Experimental conditions
-        self.radii = 'No radii values available'
-        self.interval = 15
-        self.delay = 0
-        self.load_rate = 1.5
-        self.temperature = 297
-        self.drift = 0
+        self.radii_nm = 'No radii values available'  # in meters
+        self.interval_minutes = 15  # in minutes
+        self.delay_minutes = 0  # in minutes
+        self.load_rate_minutes = 1.5  # in minutes
+        self.temperature_K = 297  # in K
         self.method = ''
 
 
@@ -108,13 +103,13 @@ class Results():
     def __init__(self):
 
         # Raw results
-        self.plate_viscosity = None
-        self.plate_Dt = None
-        self.plate_D = None
-        self.plate_nrmse = None
-        self.plate_peak = None
+        self.plate_eta = pd.DataFrame()
+        self.plate_Dt = pd.DataFrame()
+        self.plate_D = pd.DataFrame()
+        self.plate_nrmse = pd.DataFrame()
+        self.plate_peak = pd.DataFrame()
 
         # Summary/pretty print tables
-        self.plate_summary_eta = None
-        self.plate_summary_D = None
-        self.plate_summary_analysis = None
+        self.plate_summary_eta = pd.DataFrame()
+        self.plate_summary_D = pd.DataFrame()
+        self.plate_summary_analysis = pd.DataFrame()

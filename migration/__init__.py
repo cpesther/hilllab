@@ -8,5 +8,12 @@ and other migration assays.
 
 from .Bundle import Bundle
 from .load_file import load_file
+from .plate_endpoint_calculation import plate_endpoint_calculation
+from .plate_kinetic_calculation import plate_kinetic_calculation
+from .plate_export_bundle import plate_export_bundle
+from .plate_optimize_gaussian import plate_optimize_gaussian
+from .stokes_einstein import D, eta, r, T
 
-__all__ = ['Bundle', 'load_file']
+__all__ = [
+    'Bundle', 'load_file', 'plate_endpoint_calculation', 'plate_kinetic_calculation', 
+    'plate_export_bundle', 'plate_optimize_gaussian']
