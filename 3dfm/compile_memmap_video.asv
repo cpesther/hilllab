@@ -1,0 +1,46 @@
+% Christopher Esther, Hill Lab, 9/26/2025
+
+function compile_memmap_video(memmapPath, frameRate)
+    % Default frameRate if not provided
+    if nargin < 2
+        frameRate = 30;
+    end
+
+    % Ensure memmapPath is a character vector (MATLAB is picky)
+    if isstring(memmapPath)
+        memmapPath = char(memmapPath);
+    end
+
+    % Output .avi path
+    [folder, name, ~] = fileparts(memmapPath);
+    aviPath = fullfile(folder, [name '.avi']);
+    if isstring(aviPath)
+        aviPath = char(aviPath);
+    end
+
+    % Open memmap
+    m = memmapfile(memmapPath, 'Writable', false);
+
+    % --- You MUST set these to whatever you used during recording ---
+    width = 640;      % <--- replace with your recording width
+    height = 480;     % <--- replace with your recording height
+    totalFrames = numel(m.Data) / (width * height);
+    % ----------------------------------------------------------------
+
+    % Reshape into [height, width, frames]
+    frames = reshape(m.Data, [width, height, totalFrames]);
+    frames = permute(frames, [2 1 3]); % swap width/height for correct orientation
+
+    % Create AVI video
+    v = VideoWriter(aviPath, 'Uncompressed AVI');
+    v.FrameRate = frameRate;
+    open(v);
+
+    for i = 1:totalFrames
+        frame = frames(:,:,i);
+        writeVideo(v, mat2gray(frame)); % normalize grayscale to [0,1]
+    end
+
+    close(v);
+    fprintf('Video written to %s\n', aviPath);
+end

@@ -12,9 +12,10 @@ import numpy as np  # for math and data processing
 import trackpy as tp  # for particle tracking
 import pims  # python image sequence library for manipulating videos
 
-def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21, 
+def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
-                     invert=False, performance_mode='safe'):
+                     invert=False, performance_mode='safe', 
+                     return_file_details=False):
 
     """
     Automatically processes and tracks particles in a batch of AVI 
@@ -26,8 +27,8 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
     and saves the output as a VRPN file in the .mat format.
 
     ARGUMENTS:
-        video_dir (str): path to the folder with videos
-        save_dir (str): path to the folder where VRPNs should be saved
+        video_path (str): path to the folder with videos
+        save_path (str): path to the folder where VRPNs should be saved
         bead_size_pixels (int, optional): Estimated diameter of the 
             particles in pixels. Default is 21.
         trajectory_fraction (float, optional): Minimum fraction of frames a 
@@ -45,27 +46,30 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         performance_mode (string, 'safe', 'slow', or 'fast'): Controls 
             how many processes are used by TrackPy to allow this task to
             be run safely in the background or sped up on demand. 
+        return_file_details (bool, optional): allows the function to 
+            return a dict containing file details useful for higher level
+            functions. Defaults to false. 
 
     OUTPUTS:
-        Saves one `.vrpn.mat` file per video in `save_dir`. These 
+        Saves one `.vrpn.mat` file per video in `save_path`. These 
         contain particle position data in a structure compatible with 
         VRPN-based systems or legacy MATLAB tracking tools.
     """
 
     # Start by asking for the video and save directories, if needed
-    if not video_dir:
-        video_dir = filedialog.askdirectory(title=f'Select a folder with videos')
-    if not save_dir:
-        save_dir = filedialog.askdirectory(title=f'Select a destination folder')
+    if not video_path:
+        video_path = filedialog.askdirectory(title=f'Select a folder with videos')
+    if not save_path:
+        save_path = filedialog.askdirectory(title=f'Select a destination folder')
 
     # Make sure paths were provided
-    if not video_dir or not save_dir:
+    if not video_path or not save_path:
         print('Missing one or more path values')
         return
 
     # Walk the provided directory to determine the total number of files
     flist = [] # array of obnoxiously long, full filenames
-    for root, _, files in os.walk(video_dir):
+    for root, _, files in os.walk(video_path):
         for file in files:
             if file.endswith(".avi"):
                 flist.append(os.path.join(root, file))
@@ -81,8 +85,8 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
 
     # Print out these paths and the input variables and require confirmation
     print('Please confirm the parameters below:')
-    print(f'Input Folder:    {video_dir}')
-    print(f'Output Folder:   {save_dir}')
+    print(f'Input Folder:    {video_path}')
+    print(f'Output Folder:   {save_path}')
     print(f'Bead Size:       {bead_size_pixels} pixels')
     print(f'Bead Color:      {tracking_text}')
     print(f'Videos Found:    {nfiles}')
@@ -103,6 +107,9 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
     def gray(image):
         return image[:, :, 1]  # take just the green channel
     
+    # Create a dict for storing file details
+    file_details = {}
+
     # Now we can iterate over each individual movie
     for file in flist:
 
@@ -125,7 +132,7 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         print(f'Finding particle positions in frames')
 
         # Determine how many processes to allow TrackPy to use
-        if performance_mode == 'safe':
+        if performance_mode == 'slow':
             num_processes = os.cpu_count() / 2
         elif performance_mode == 'fast':
             num_processes = os.cpu_count()
@@ -147,8 +154,8 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         print('Linking particle positions to create trajectories')
         try:
             t = tp.link(particle_positions, max_travel_pixels, memory=memory)
-        except RuntimeError:
-            print('No beads found in this video')
+        except:
+            print('Unable to link beads in this video')
             continue
 
         # Now with the trajectories created, let's filter out those
@@ -292,7 +299,7 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         # Now save that container as a .vrpn.mat file
         print('\n')
         print(f'Saving results for {file}...')
-        save_name = os.path.join(save_dir, f'{file_name[:-4]}.vrpn.mat')
+        save_name = os.path.join(save_path, f'{file_name[:-4]}.vrpn.mat')
         savemat(save_name, vrpn, long_field_names=True)
 
         # Some final messages for this file
@@ -301,11 +308,18 @@ def autotrack_videos(video_dir=None, save_dir=None, bead_size_pixels=21,
         total_file_time = time.time() - track_start_time
         print(f'Finished processing in {total_file_time / 60} minutes!')
         
+        # Save these file details to the dict
+        file_details[file]['save_name'] = save_name
+
         # Wait one second and clear all printed outputs
         time.sleep(1)
         clear_output(wait=True)
 
-    print(f'Finished processing all files in {video_dir}')
+    print(f'Finished processing all files in {video_path}')
     
     total_batch_time = time.time() - batch_start_time
     print(f'Finished processing batch in {round(total_batch_time / 60, 2)} minutes')
+    print(f'VRPNs saved to {save_path}')
+
+    if return_file_details:
+        return file_details
