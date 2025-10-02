@@ -1,6 +1,6 @@
 % Christopher Esther, Hill Lab, 9/26/2025
 
-function [tStart, tEnd] = record_synced_video(path, camera, total_frames, fps, timeout_seconds)
+function [] = record_synced_video(path, video_number, camera, total_frames, fps, timeout_seconds)
 % RECORD_REALTIME_TRACK Capture and track particles in near real-time using
 % a PointGrey Flea3 camera.
 %
@@ -11,6 +11,9 @@ function [tStart, tEnd] = record_synced_video(path, camera, total_frames, fps, t
 %
 % ARGUMENTS:
 % path (string): File path prefix for the .avi video (without number or extension).
+%
+% video_number (int, optional): Number appended to the first video's 
+% filename. Automatically increments. Default is 1.
 %
 % camera (string, optional): The camera being used. Determines which video
 % format can be used. Defaults to 'GS3'. Other valid values is 'FL3'.
@@ -31,19 +34,23 @@ end
 path = char(path);
 
 % Set default arguments if not provided
-if nargin < 2 || isempty(camera)
+if nargin < 2 || isempty(video_number)
+    video_number = 1;
+end
+
+if nargin < 3 || isempty(camera)
     camera = 'GS3';
 end
 
-if nargin < 3 || isempty(total_frames)
+if nargin < 4 || isempty(total_frames)
     total_frames = 1200;
 end
 
-if nargin < 4 || isempty(timeout_seconds)
+if nargin < 5 || isempty(timeout_seconds)
     timeout_seconds = 90 * total_frames / 1200;
 end
 
-if nargin < 5 || isempty(fps)
+if nargin < 6 || isempty(fps)
     fps = 60;
 end
 
@@ -70,12 +77,46 @@ diskLogger = VideoWriter(fullFileName, 'Grayscale AVI');
 diskLogger.FrameRate = fps;                                   % Match frame rate to acquisition
 vid.DiskLogger = diskLogger;                                  % Attach disk logger to video object
 preview(vid);                                                 % Open live preview window
+running = true;                                               % Flag to control recording loop
 
-% Record timestamp to matlab file
-tStart = posixtime(datetime('now'));  % Current time in seconds since Jan 1, 1970
-start(vid);                                     % Start video acquisition
-wait(vid, timeout_seconds);                     % Wait until acquisition finishes or times out
-tEnd = posixtime(datetime('now'));  % Current time in seconds since Jan 1, 1970
+% Here's the actual recording loop
+while running
+
+    % Prompt user
+    prompt = 'Take video? Y/N [Y]: ';
+    str = input(prompt, 's'); if isempty(str), str = 'Y'; end
+
+    % If user chooses to record
+    if strcmpi(str, 'y')
+        disp('Press any key when ready to record.')
+        pause                                % Wait for user to press a key
+
+        start(vid);                          % Start video acquisition
+        
+        % Record timestamp to matlab file
+        timestamp = posixtime(datetime('now'));                          % Current time in seconds since Jan 1, 1970
+        timestampPath = [path sprintf('_%04d.time.mat', video_number)]; % Full path
+        save(timestampPath, 'timestamp');                        % Save timestamp to a .mat file
+
+        wait(vid, timeout_seconds);          % Wait until acquisition finishes or times out
+
+        % Set up new disk logger for next video
+        video_number = video_number + 1;     
+        fullFileName = [path sprintf('_%04d.avi', video_number)];
+        diskLogger = VideoWriter(fullFileName, 'Grayscale AVI');
+        diskLogger.FrameRate = fps;
+        vid.DiskLogger = diskLogger;
+
+        pause(5)                             % Brief pause before next iteration
+        beep                                 % Audio notification
+    
+    % If user chooses not to record
+    elseif strcmpi(str, 'n')
+        disp('Exiting...')
+        running = false;                     % Exit the loop
+    end
+
+end
 
 % Clean up video objects
 closepreview(vid);                           % Close live preview window

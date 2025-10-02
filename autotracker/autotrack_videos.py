@@ -1,5 +1,6 @@
 # Christopher Esther, Hill Lab, 8/15/2025
 import os
+import shutil
 import time
 import platform
 from datetime import datetime
@@ -10,7 +11,9 @@ import pandas as pd
 from scipy.io import savemat  # for saving MatLab files
 import numpy as np  # for math and data processing
 import trackpy as tp  # for particle tracking
-import pims  # python image sequence library for manipulating videos
+import pims
+
+from ..notes._note_manager import _create_note, _append_note
 
 def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
@@ -91,7 +94,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     print(f'Bead Color:      {tracking_text}')
     print(f'Videos Found:    {nfiles}')
 
-    confirmation = input('\nAre the values correct? (y/n):')
+    confirmation = input('\nAre the values correct? (y/n): ')
     if confirmation.upper() != 'Y':
         print('Parameters not confirmed')
         return
@@ -141,12 +144,12 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
 
         # Track the video
         minmass_value = 750 * (bead_size_pixels / 21) ** 3
-        particle_positions = tp.batch(fv, bead_size_pixels, 
-            minmass=minmass_value, processes=int(num_processes), invert=invert)
+        particle_positions = tp.batch(fv, bead_size_pixels, minmass=minmass_value, 
+            processes=int(num_processes), invert=invert)
 
         # Once finished tracking, display the time taken
         total_track_time = (time.time() - track_start_time)
-        print(f'Finished finding particles in {total_track_time / 60} minutes')
+        print(f'Finished finding particles in {round(total_track_time / 60, 2)} minutes')
 
         # Now that we have all the particle positions, let's link them 
         # into trajectories which track how individual particles are 
@@ -154,8 +157,22 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         print('Linking particle positions to create trajectories')
         try:
             t = tp.link(particle_positions, max_travel_pixels, memory=memory)
-        except:
-            print('Unable to link beads in this video')
+        except Exception as e:
+            print(f'Unable to link beads in {file}')
+            
+            # Create an error folder and error report file
+            error_folder = os.path.join(video_path, 'Errored Videos')
+            os.makedirs(error_folder, exist_ok=True)
+            note_path = _create_note(folder_path=error_folder, file_name='Error Report', 
+                                     boilerplate='tracking_error')
+            
+            # Write a note to the error report file
+            report_text = f'[{file}] Exception during linking: {e}'
+            _append_note(path=note_path, text=report_text)
+
+            # Move this video into the folder
+            file_error_path = os.path.join(error_folder, os.path.basename(file))
+            shutil.move(file, file_error_path)
             continue
 
         # Now with the trajectories created, let's filter out those
@@ -229,10 +246,10 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
 
         # Here's where we iteratively add the data from the trackpy DFs 
         # into the big array.
-        print(f'Building VRPN...')
         vrpn_index = 0  # counter value used for tracking the row index in the VRPN file
 
-        # For every frame in the dataset 
+        # For every frame in the dataset
+        print('Building VRPN...')
         for frame_number in t3['frame'].unique():
 
             # For each particle within this frame
@@ -244,7 +261,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
                     x, y = pos['x'], pos['y']  # unpack the x and y positions
 
                 except KeyError:
-                    # If this particle can be found, set x and y to None
+                    # If this particle can't be found, set x and y to None
                     x, y = np.NAN, np.NAN
 
                 # Add this data to the main VRPN array
