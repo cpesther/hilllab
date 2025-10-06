@@ -24,64 +24,64 @@ function params_out = varforce_drive(params, filename)
 %   params_out : structure with updated parameters after calibration
 
 % Handle the argument list
-if nargin < 1 | isempty(params) || ~exist('params', 'var')
-    params = [];
-    logentry('No input parameter structure defined. Assuming defaults.');
+if nargin < 1 || isempty(params)
+    params = struct();  % empty struct, not []
+    print_message('No input parameter structure defined. Assuming defaults.');
 end
 
 if ~isfield(params, 'myDAQid')
     params.myDAQid = 'daqtest';
-    logentry('No myDAQid defined.  Defaulting to daqtest.');
+    print_message('No myDAQid defined.  Defaulting to daqtest.');
 end
 
 if ~isfield(params, 'DAQ_sampling_rate')
     params.DAQ_sampling_rate = 100000;
-    logentry('No sampling rate defined.  Defaulting to 100 [kHz].');
+    print_message('No sampling rate defined.  Defaulting to 100 [kHz].');
 end
 
 if ~isfield(params, 'NRepeats')
     params.NRepeats = 0;
-    logentry('No NRepeats defined.  Defaulting to 0 repeats of input signal.');
+    print_message('No NRepeats defined.  Defaulting to 0 repeats of input signal.');
 end
 
 if ~isfield(params, 'my_pole_geometry')
     params.my_pole_geometry = 'pole1-flat';
-    logentry('No geometry specified.  Defaulting to pole1-flat geometry.');
+    print_message('No geometry specified.  Defaulting to pole1-flat geometry.');
 end
 
 if ~isfield(params, 'voltages')
     params.voltages = [0 1 2 3 4 5];
-    logentry('No voltages defined.  Defaulting to [0 1 2 3 4 5] Volts.');
+    print_message('No voltages defined.  Defaulting to [0 1 2 3 4 5] Volts.');
 end
 
 if ~isfield(params, 'pulse_widths')
     params.pulse_widths = [1 1 1 1 1 1];
-    logentry('No pulse widths defined.  Defaulting to 1 [sec] width for each pulse.');
+    print_message('No pulse widths defined.  Defaulting to 1 [sec] width for each pulse.');
 end
 
 if ~isfield(params, 'deg_tau')
     params.deg_tau = .0012;
-    logentry('No degauss time constant specified.  Defaulting to rapid degauss (tau=.0012).');
+    print_message('No degauss time constant specified.  Defaulting to rapid degauss (tau=.0012).');
 end
 
 if ~isfield(params, 'deg_freq')
     params.deg_freq = 10000;
-    logentry('No degauss frequency specified.  Defaulting to rapid degauss (f=10000).');
+    print_message('No degauss frequency specified.  Defaulting to rapid degauss (f=10000).');
 end
 
 if ~isfield(params, 'degauss')
     params.degauss = 'on';
-    logentry('No choice made for degauss.  Assuming you want to degauss.');
+    print_message('No choice made for degauss.  Assuming you want to degauss.');
 end
 
 if ~isfield(params, 'deg_loc')
     params.deg_loc = 'end';
-    logentry('No choice made for degauss location.  Assuming you want it in the middle of the zero pulse.');
+    print_message('No choice made for degauss location.  Assuming you want it in the middle of the zero pulse.');
 end
 
 if ~isfield(params, 'fps')
     params.fps = 120;
-    logentry('No choice made for frames per second.  Assuming you want rate of 120 fps.');
+    print_message('No choice made for frames per second.  Assuming you want rate of 120 fps.');
 end
     
 myDAQid           = params.myDAQid;
@@ -161,10 +161,10 @@ signal = zeros(length(t), nDACout);
 % sent to DAQ board according to the experimental details defined above.
 
 events = cumsum(pulse_widths);
+max_voltage_amplitude = max(voltages); % V
 
 % DEGAUSS CODE
 if strcmp(degauss, 'on')
-    max_voltage_amplitude = max(voltages); % V
     idx = find(voltages == 0);
     degauss_duration = (pulse_widths(idx)/2); % seconds
     degt = [0 : 1/(DAQ_sampling_rate - 1) : degauss_duration]';
@@ -224,9 +224,9 @@ for k = 1 : length(voltages)
     end
 
 end
-logentry('signal matrix prepared');
+print_message('signal matrix prepared');
 
-% logentry(['voltages: ' num2str(length(voltages))]);
+% print_message(['voltages: ' num2str(length(voltages))]);
 % figure;
 %     plot(t, signal);
 %     axis([0 t(end) Vrange(1) Vrange(2)]);    
@@ -258,17 +258,4 @@ params_out.dominant_coil = dominant_coil;
 
 % Save the params to a file
 save(filename, '-struct', 'params_out');          
-logentry(['Saved metadata to file: ' filename '.']);
-                   
-% -------------
-function logentry(txt)
-    logtime = clock;
-    logtimetext = [ '(' num2str(logtime(1),  '%04i') '.' ...
-                   num2str(logtime(2),        '%02i') '.' ...
-                   num2str(logtime(3),        '%02i') ', ' ...
-                   num2str(logtime(4),        '%02i') ':' ...
-                   num2str(logtime(5),        '%02i') ':' ...
-                   num2str(round(logtime(6)), '%02i') ') '];
-     headertext = [logtimetext 'varforce_cal_drive: '];
-     
-     fprintf('%s%s\n', headertext, txt);
+print_message(['Saved metadata to file: ' filename '.']);

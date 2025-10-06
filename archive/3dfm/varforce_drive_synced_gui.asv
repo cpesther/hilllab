@@ -172,7 +172,6 @@ function pushbutton_start_Callback(hObject, eventdata, handles)
         params.voltages     = [5 0]; % cleaning up with max voltage case
         params.pulse_widths = [0.5 0.5]; 
         params              = varforce_drive(params);
-        logentry('Full degauss done.');
     end 
      
     params.voltages             = str2num(get(handles.edit_voltages, 'String'));
@@ -352,8 +351,8 @@ function degauss_now_button_Callback(hObject, eventdata, handles)
     pole_geometry_idx           = get(handles.popupmenu_geometry, 'Value');
     params.my_pole_geometry     = char(pole_geometry(pole_geometry_idx));
     params.degauss              = 'on';
-    params.deg_tau              = str2num(get(handles.edit_deg_tau, 'String'));
-    params.deg_freq             = str2num(get(handles.edit_deg_freq, 'String'));
+    params.deg_tau              = str2double(get(handles.edit_deg_tau, 'String'));
+    params.deg_freq             = str2double(get(handles.edit_deg_freq, 'String'));
     params.voltages             = [5 0];
     params.pulse_widths         = [0.5 0.5];
     params.duration             = .1;
@@ -382,7 +381,7 @@ function checkbox_full_degauss_Callback(hObject, eventdata, handles)
 % =========================================================================
 
 function logentry(txt)
-    logtime = clock;
+    logtime = datetime('now');
     logtimetext = [ '(' num2str(logtime(1),  '%04i') '.' ...
                    num2str(logtime(2),        '%02i') '.' ...
                    num2str(logtime(3),        '%02i') ', ' ...

@@ -15,6 +15,8 @@ from datetime import datetime
 # Display stuff
 from .format_duration import format_duration
 from .progress_bar import progress_bar
+from .print_dict_table import print_dict_table
+from .pretty_timestamp import pretty_timestamp
 
 # Messages and recording
 from .record_message import record_message

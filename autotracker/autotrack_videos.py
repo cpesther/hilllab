@@ -1,19 +1,25 @@
 # Christopher Esther, Hill Lab, 8/15/2025
 import os
-import shutil
 import time
 import platform
 from datetime import datetime
 
 from tkinter import filedialog
-from IPython.display import clear_output
 import pandas as pd
 from scipy.io import savemat  # for saving MatLab files
 import numpy as np  # for math and data processing
 import trackpy as tp  # for particle tracking
 import pims
 
+# This try/except allows the function to run in a non-Jupyter environment
+try:
+    from IPython.display import clear_output, display
+    import ipywidgets as widgets
+except:
+    pass
+
 from ..notes._note_manager import _create_note, _append_note
+from ..widgets.button_open_path import button_open_path
 
 def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
@@ -71,7 +77,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         return
 
     # Walk the provided directory to determine the total number of files
-    flist = [] # array of obnoxiously long, full filenames
+    flist = []  # array of obnoxiously long, full filenames
     for root, _, files in os.walk(video_path):
         for file in files:
             if file.endswith(".avi"):
@@ -100,7 +106,10 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         return
     
     # Print a message to start
-    clear_output(wait=True)  # clear all print outputs
+    try:
+        clear_output(wait=True)  # clear all print outputs
+    except:
+        pass
     print('Beginning batch autotracking')
     batch_start_time = time.time()  # start a timer for the whole batch    
 
@@ -119,20 +128,16 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         # First we'll determine file name by splitting the path
         file_name = os.path.basename(file)
         print(f'Starting processing on {file_name}')
-
-        # Convert the file to grayscale and extract the frames
-        print(f'Converting file to grayscale')
         
-        frames = gray(pims.PyAVReaderIndexed(file))
-        fv = []
-        for fr in range(len(frames)):
-            frame = frames[fr]
-            fv.append(frame)
+        # Open the file and convert to grayscale
+        print(f'Loading video...')
+        with pims.PyAVReaderIndexed(file) as reader:
+            frames = gray(reader)
+            fv = [frames[fr] for fr in range(len(frames))]
 
         # Start a time and print a message before we begin tracking
         track_start_time = time.time()  # start a timer for this video
-        print('\n')  # to start a new line after the progress bar above
-        print(f'Finding particle positions in frames')
+        print(f'Finding particle positions in frames...')
 
         # Determine how many processes to allow TrackPy to use
         if performance_mode == 'slow':
@@ -160,25 +165,22 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         except Exception as e:
             print(f'Unable to link beads in {file}')
             
-            # Create an error folder and error report file
-            error_folder = os.path.join(video_path, 'Errored Videos')
-            os.makedirs(error_folder, exist_ok=True)
-            note_path = _create_note(folder_path=error_folder, file_name='Error Report', 
+            # Create an error report file
+            error_report_path = _create_note(folder_path=video_path, file_name='Error Report', 
                                      boilerplate='tracking_error')
             
             # Write a note to the error report file
             report_text = f'[{file}] Exception during linking: {e}'
-            _append_note(path=note_path, text=report_text)
-
-            # Move this video into the folder
-            file_error_path = os.path.join(error_folder, os.path.basename(file))
-            shutil.move(file, file_error_path)
+            _append_note(path=error_report_path, text=report_text)
             continue
 
         # Now with the trajectories created, let's filter out those
         # that have fewer points than a given threshold (i.e. they
         # don't last long enough to be valuable).
-        clear_output(wait=True)
+        try:
+            clear_output(wait=True)
+        except:
+            pass
         print(f'Applying filters to {file_name}')
 
         # Calculate the minimum number of frames that a trajectory must
@@ -330,13 +332,41 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
 
         # Wait one second and clear all printed outputs
         time.sleep(1)
-        clear_output(wait=True)
+        try:
+            clear_output(wait=True)
+        except:
+            pass
 
-    print(f'Finished processing all files in {video_path}')
-    
     total_batch_time = time.time() - batch_start_time
-    print(f'Finished processing batch in {round(total_batch_time / 60, 2)} minutes')
+    try:
+        clear_output(wait=True)
+    except:
+        pass
+    print(f'Finished processing all files in {video_path}')
+    print(f'Batch complete in {round(total_batch_time / 60, 2)} minutes')
     print(f'VRPNs saved to {save_path}')
+
+    # Display error report information, if needed
+    if os.path.exists(error_report_path):
+        print('ALERT: One or more errors were encounterd during tracking.')
+        print('       Please view the error report linked below.')
+
+        # Try to create a button if in Jupyter, otherwise just print
+        try:
+            button_open_path(file_path = error_report_path, text='Open Error Report', 
+                             button_color='darkred', text_color='white')
+        except:
+            print(error_report_path)
+
+    # Display buttons to navigate to relevant folders
+    try:
+        videos_button = button_open_path(file_path = video_path, text='Open Videos Folder', 
+                                         button_color='dodgerblue', width=200)
+        vrpns_button = button_open_path(file_path = save_path, text='Open VRPNs Folder', 
+                                        button_color='darkorange', width=200)
+        display(widgets.HBox([vrpns_button, videos_button]))
+    except:
+        pass
 
     if return_file_details:
         return file_details

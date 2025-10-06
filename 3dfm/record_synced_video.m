@@ -2,7 +2,7 @@
 
 function [tStart, tEnd] = record_synced_video(path, camera, total_frames, fps, timeout_seconds)
 % RECORD_REALTIME_TRACK Capture and track particles in near real-time using
-% a PointGrey Flea3 camera.
+% a PointGrey camera.
 %
 % This function captures video from a PointGrey Flea3 camera, sends frames 
 % to a Python script for near real-time particle tracking, displays the 
@@ -65,7 +65,7 @@ vid.FramesPerTrigger = total_frames;                          % Set number of fr
 vid.LoggingMode = 'disk&memory';                              % Log frames to memory
 
 % Set up disk logger to save video as grayscale AVI
-fullFileName = [path sprintf('_%04d.avi', video_number)];
+fullFileName = [path sprintf('.avi')];
 diskLogger = VideoWriter(fullFileName, 'Grayscale AVI');
 diskLogger.FrameRate = fps;                                   % Match frame rate to acquisition
 vid.DiskLogger = diskLogger;                                  % Attach disk logger to video object

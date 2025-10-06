@@ -79,7 +79,7 @@ def plot_xy_maximize(path, save=False, label_beads=True):
                 
         # Add in the stuff to make the graph pretty
         ax.set(xlabel='Relative X Position (pixels)', ylabel='Relative Y Position (pixels)')
-        ax.set_title(f'{file[-120:]}\nPlot XY Maximize:{max(beads_to_plot) + 1} total beads', fontsize=10)
+        ax.set_title(f'{file[-120:]}\nPlot XY Maximize: {max(beads_to_plot) + 1} total beads', fontsize=10)
 
         # Save plot if requested
         if save:
