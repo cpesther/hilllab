@@ -56,6 +56,8 @@ else
     error('Unsupported camera type: %s', camera);
 end
 
+fprintf('running inside syncing!')
+
 % Set up video capture with PointGrey Flea3 camera
 vid = videoinput('pointgrey', 1, video_format);               % Create video input object
 src = getselectedsource(vid);                                 % Get the camera source
@@ -72,10 +74,10 @@ vid.DiskLogger = diskLogger;                                  % Attach disk logg
 preview(vid);                                                 % Open live preview window
 
 % Record timestamp to matlab file
-tStart = posixtime(datetime('now'));  % Current time in seconds since Jan 1, 1970
+tStart = posixtime(datetime('now'));            % Current time in seconds since Jan 1, 1970
 start(vid);                                     % Start video acquisition
 wait(vid, timeout_seconds);                     % Wait until acquisition finishes or times out
-tEnd = posixtime(datetime('now'));  % Current time in seconds since Jan 1, 1970
+tEnd = posixtime(datetime('now'));              % Current time in seconds since Jan 1, 1970
 
 % Clean up video objects
 closepreview(vid);                           % Close live preview window

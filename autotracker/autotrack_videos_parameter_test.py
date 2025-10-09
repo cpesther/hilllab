@@ -10,7 +10,7 @@ from IPython.display import clear_output
 from ..utilities.print_dict_table import print_dict_table
 
 def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21, 
-                                    max_travel_pixels=5, memory=0, invert=False):
+                                    max_travel_pixels=5, memory=0, invert=False, **kwargs):
 
     """
     Allows the user to test autotracking parameters on a small portion
@@ -31,6 +31,11 @@ def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21,
         invert (bool, optional): when false, bright spots on a dark background
             will be tracked. When true, dark spots on a bright background
             will be tracked. 
+
+        Note: This function does not actually use any kwargs, but it is 
+        designed to take them so that this function can accept all the 
+        same arguments as the actual autotrack_videos function, which 
+        just makes documentation and usage a lot easier. 
     """
 
     # First we'll run some logic to get the exact path to the video we're testing
