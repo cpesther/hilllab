@@ -51,7 +51,8 @@ end
 if strcmp(camera, 'GS3')
     video_format = 'F7_Raw8_2448x2048_Mode0';
 elseif strcmp(camera, 'FL3')
-    video_format = 'F7_Raw8_1280x1024_Mode0';
+    % video_format = 'F7_Raw8_1280x1024_Mode0';
+    video_format = 'F7_Mono8_640x480_Mode0';
 else
     error('Unsupported camera type: %s', camera);
 end
@@ -64,7 +65,7 @@ src = getselectedsource(vid);                                 % Get the camera s
 src.FrameRate = fps;                                          % Set the frame rate
 
 vid.FramesPerTrigger = total_frames;                          % Set number of frames per capture
-vid.LoggingMode = 'disk';                              % Log frames to memory
+vid.LoggingMode = 'disk&memory';                              % Log frames to memory
 
 % Set up disk logger to save video as grayscale AVI
 fullFileName = [path sprintf('.avi')];
@@ -82,15 +83,5 @@ tEnd = posixtime(datetime('now'));              % Current time in seconds since 
 % Clean up video objects
 closepreview(vid);                           % Close live preview window
 imaqreset;                                   % Reset image acquisition hardware
-
-objs = imaqfind;    
-delete(objs);       
-clear objs             
-
-% Shut down any parallel pool workers
-poolobj = gcp('nocreate');  
-if ~isempty(poolobj)
-    delete(poolobj);         
-end
 
 end

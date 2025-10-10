@@ -78,7 +78,7 @@ def classify_motion(path, plot=False, save=False, label_beads=True):
         classifications.loc[len(classifications)] = [bead, transporting]
     
     if not plot:
-        return classifications, clean_data
+        return classifications, data, clean_data
     else:
         # Add in the stuff to make the graph pretty
         ax.set(xlabel='X Position (pixels)', ylabel='Y Position (pixels)')

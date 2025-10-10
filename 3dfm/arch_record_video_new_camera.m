@@ -1,5 +1,5 @@
 
-function [] = record_video_new_camera(file, file_number, frames, max_time, frame_rate)
+function [] = arch_record_video_new_camera(file, file_number, frames, max_time, frame_rate)
 
 %record_video.m -- Matthew Combs 5/7/2015
 %
@@ -22,17 +22,23 @@ if (nargin < 3) || isempty(frames),  frames = 1200; end; %2500 for long videos, 
 if (nargin < 4) || isempty(max_time),  max_time = 90*frames/1200; end;
 if (nargin < 5) || isempty(frame_rate),  frame_rate = 60; end; %10 for long videos, 60 for normal
 
-info = imaqhwinfo('pointgrey', 1);
-disp(info.SupportedFormats)
+
+camera = 'FL3'; % Specify the camera type
+% Set the correct video format depending on the camera used
+if strcmp(camera, 'GS3')
+    video_format = 'F7_Raw8_2448x2048_Mode0';
+elseif strcmp(camera, 'FL3')
+    video_format = 'F7_Raw8_1280x1024_Mode0';
+    % video_format = 'F7_Mono8_640x480_Mode0';
+else
+    error('Unsupported camera type: %s', camera);
+end
 
 
 
-% mode = 'F7_Raw8_2448x2048_Mode0';  % gs3 camera
-mode = 'F7_Raw8_1280x1024_Mode0';  % flea camera
-
-vid = videoinput('pointgrey', 1, mode);
+vid = videoinput('pointgrey', 1, video_format);
 src = getselectedsource(vid);
-src.FrameRate = frame_rate;%num2str(frame_rate);
+src.FrameRate = frame_rate;
 
 vid.FramesPerTrigger = frames;
 

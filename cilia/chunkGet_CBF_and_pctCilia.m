@@ -1,0 +1,68 @@
+%% Get Ciliary Beat Frequency from ROI
+
+function [mens_CBF, px_CBF, FFCA] = chunkGet_CBF_and_pctCilia(test_series,Fs,fthresh)
+% Outputs:
+% mens_CBF - ensemble mean CBF for the whole ROI selected
+% px_CBF - "CBF" for each pixel
+% FFCA - fraction of functional ciliated area
+
+if (nargin<2) | ~isempty(Fs)
+    Fs=60; % Set default sampling rate to 60 fps
+end
+if (nargin<3) | ~isempty(fthresh)
+    fthresh=5; % Set default sampling rate to 60 fps
+end
+
+warning off
+
+
+fprintf('allocating memory')
+[L, N] = size(test_series);
+
+
+fprintf('running iteration')
+
+% Preallocate appropriate size for all_psdx
+all_psdx = zeros(L, N/2+1);  % Preallocate memory for all_psdx
+px_max = zeros(L);
+
+for i = 1:10
+
+    x = test_series(i, :);
+
+    xdft = fft(x-mean(x));  % perform fft
+    xdft = xdft(1:N/2+1);
+    
+    psdx = (1/(N*Fs)) * abs(xdft).^2;
+    psdx(2:end-1) = 2*psdx(2:end-1);
+    freq = 0:Fs/length(x):Fs/2;
+    psdx(1:15) = 0;
+
+
+    % ens_CBF(m,:) = psdx;
+    % px_CBF(i,j,1,:) = psdx;
+    px_max(i) = max(psdx);
+
+    % store the psdx value into an array of them all
+    % fprintf('i = %d, length(x) = %d\n', i, length(psdx));
+
+    all_psdx(i, :) = psdx;  % Store the psdx value into an array
+    
+    
+end
+% warning on
+% close(himg) %close ROI figure;
+
+fprintf('last calculations')
+mens_CBF = mean(all_psdx,1);
+figure;
+plot(freq(1:end),mens_CBF(1:end))
+grid on
+title('Periodogram Using FFT')
+xlabel('Frequency (Hz)')
+ylabel('Power/Frequency (dB/Hz)')
+
+spx = px_max(:);
+FFCA = sum(spx>fthresh)/numel(spx);
+figure;imshow(px_max/max(freq));
+% save([vidname(1:end-4),'_CBF.mat'],'freq','mens_CBF','FFCA')
