@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 # Read version from file
-__version__ = 1.1.1.251013
+__version__ = "1.1.1.251013"
 
 # Read requirements
 req_file = Path(__file__).parent / "requirements.txt"
