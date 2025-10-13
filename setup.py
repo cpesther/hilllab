@@ -2,10 +2,7 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 # Read version from file
-version_file = Path("hilllab") / "__version__.py"
-namespace = {}
-exec(version_file.read_text(), namespace)
-__version__ = namespace["__version__"]
+__version__ = 1.1.1.251013
 
 # Read requirements
 req_file = Path(__file__).parent / "requirements.txt"
