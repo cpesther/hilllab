@@ -14,9 +14,9 @@ from datetime import datetime
 # Import all the functions included in this subpackage
 # Display stuff
 from .format_duration import format_duration
-from .progress_bar import progress_bar
+from .print_progress_bar import print_progress_bar
 from .print_dict_table import print_dict_table
-from .pretty_timestamp import pretty_timestamp
+from .current_timestamp import current_timestamp
 
 # Messages and recording
 from .record_message import record_message

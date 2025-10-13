@@ -4,7 +4,7 @@ import pandas as pd
 
 from ._plate_profile_curve import _plate_profile_curve
 from .plate_export_bundle import plate_export_bundle
-from ..utilities.progress_bar import progress_bar
+from ..utilities.print_progress_bar import print_progress_bar
 
 def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radius_nm=0, 
                        interval_minutes=15, delay_minutes=0, load_rate_minutes=1.5, 
@@ -113,7 +113,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
         
         # Load this read’s raw data
         one_read_data = bundle._load_read(read_number=read, type="raw")
-        progress_bar(progress=read, total=bundle.data.num_reads-1, title='Normalizing data')
+        print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Normalizing data')
 
         # Prepare container for normalized columns
         one_read_data_normalized = pd.DataFrame(index=one_read_data.index, columns=selected_columns)
@@ -217,7 +217,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
         
             # Pull that read's data from the main dataframe and set up some 
             # lists to store the results
-            progress_bar(progress=read, total=bundle.data.num_reads-1, title='Profiling data  ')
+            print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Profiling data  ')
             one_read_data = bundle._load_read(read_number=read, type='normalized')
             one_column_peaks = []
             one_column_ranges = []
@@ -364,7 +364,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
     for read in range(bundle.data.num_reads):
     
         # Pull the data from that read
-        progress_bar(progress=read, total=bundle.data.num_reads-1, title='Cleaning data   ')
+        print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Cleaning data   ')
         one_read_data = bundle._load_read(read_number=read, type='raw')
         one_read_data_cleaned = pd.DataFrame(columns=selected_columns)
         one_read_gaussian_indices = pd.DataFrame(columns=selected_columns)

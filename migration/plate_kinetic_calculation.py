@@ -4,7 +4,7 @@ import pandas as pd
 
 from ._plate_load_wrapper import _plate_load_wrapper
 from .plate_endpoint_calculation import plate_endpoint_calculation
-from ..utilities.progress_bar import progress_bar
+from ..utilities.print_progress_bar import print_progress_bar
 
 
 def plate_kinetic_calculation(path=None, bundle=None, data_type='SPE', **kwargs):
@@ -53,7 +53,7 @@ def plate_kinetic_calculation(path=None, bundle=None, data_type='SPE', **kwargs)
     for read_number in all_read_numbers:
         
         # Run the endpoint calculation on the timepoint
-        progress_bar(progress=read_number, total=max(all_read_numbers), title='Calculating fits')
+        print_progress_bar(progress=read_number, total=max(all_read_numbers), title='Calculating fits')
         endpoint_results = plate_endpoint_calculation(bundle=bundle, read=read_number, nested=True)
 
         # Map the results from the endpoint calculation into the bundle results

@@ -2,7 +2,7 @@
 import os
 from tkinter import filedialog
 
-from ..utilities.pretty_timestamp import pretty_timestamp
+from ..utilities.current_timestamp import current_timestamp
 from ..utilities.print_dict_table import print_dict_table
 
 try:
@@ -53,7 +53,7 @@ def autotrack_select_paths():
         'Video Path': video_path,
         'Save Path': save_path,
         'Videos Found': len(flist),
-        'Time Selected': pretty_timestamp()
+        'Time Selected': current_timestamp()
     }
     print_dict_table(dict=info, title='PATH INFO')
 
