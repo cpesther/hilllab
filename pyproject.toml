@@ -6,9 +6,28 @@ build-backend = "setuptools.build_meta"
 name = "hilllab"
 version = "1.1.2.251013"
 description = "Code used in the David Hill Lab in the Marsico Lung Institute at UNC-CH"
-authors = [{name = "Christopher Esther"}]
+authors = [{name = "Christopher Esther", email = "Christopher_Esther@med.unc.edu"}]
 readme = "README.md"
 requires-python = ">=3.10"
+
+dependencies = [
+    "matplotlib==3.8.4",
+    "numpy<2",
+    "pandas==2.3.2",
+    "PIMS==0.7",
+    "psutil==5.9.0",
+    "scikit_learn==1.4.2",
+    "scipy==1.16.2",
+    "trackpy==0.7",
+    "setuptools==69.5.1"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

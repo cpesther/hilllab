@@ -24,7 +24,7 @@ from ..widgets.button_open_path import button_open_path
 def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
                      invert=False, performance_mode='safe', 
-                     return_file_details=False):
+                     return_file_details=False, bypass_confirmation=False):
 
     """
     Automatically processes and tracks particles in a batch of AVI 
@@ -36,7 +36,8 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     and saves the output as a VRPN file in the .mat format.
 
     ARGUMENTS:
-        video_path (str): path to the folder with videos
+        video_path (str): path to the folder with videos or to a single
+            video.
         save_path (str): path to the folder where VRPNs should be saved
         bead_size_pixels (int, optional): Estimated diameter of the 
             particles in pixels. Default is 21.
@@ -58,6 +59,10 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         return_file_details (bool, optional): allows the function to 
             return a dict containing file details useful for higher level
             functions. Defaults to false. 
+        bypass_confirmation (bool, optional): when True, the function
+            will not ask for user confirmation of parameters before 
+            running autotracking. Mostly used when nested in other
+            functions, defaults to false. 
 
     OUTPUTS:
         Saves one `.vrpn.mat` file per video in `save_path`. These 
@@ -65,7 +70,11 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         VRPN-based systems or legacy MATLAB tracking tools.
     """
 
-    # Start by asking for the video and save directories, if needed
+    # Path not created unless a reportable error occurs
+    error_report_path = None
+
+    # Start by opening file browser windows for the video and save 
+    # directories if they weren't provided in the arguments.
     if not video_path:
         video_path = filedialog.askdirectory(title=f'Select a folder with videos')
     if not save_path:
@@ -75,13 +84,19 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     if not video_path or not save_path:
         print('Missing one or more path values')
         return
+    
+    # Check if the provided path leads directly to a video or to a folder
+    if os.path.isdir(video_path):  # if it's a directory
 
-    # Walk the provided directory to determine the total number of files
-    flist = []  # array of obnoxiously long, full filenames
-    for root, _, files in os.walk(video_path):
-        for file in files:
-            if file.endswith(".avi"):
-                flist.append(os.path.join(root, file))
+        # Walk the provided directory to determine the total number of files
+        flist = []  # array of obnoxiously long, full filenames
+        for root, _, files in os.walk(video_path):
+            for file in files:
+                if file.endswith('.avi'):
+                    flist.append(os.path.join(root, file))
+
+    else:  # if it's not a directory, then we just have one file
+        flist = [video_path]
 
     # Calculate total number of files and print some messages
     nfiles = len(flist)
@@ -125,8 +140,13 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     # Now we can iterate over each individual movie
     for file in flist:
 
-        # First we'll determine file name by splitting the path
+        # Create an entry in the file details for this file
+        file_details[file] = {}
+        file_details[file]['file_path'] = file
+
+        # Determine file name by splitting the path
         file_name = os.path.basename(file)
+        file_details[file]['file_name'] = file_name
         print(f'Starting processing on {file_name}')
         
         # Open the file and convert to grayscale
@@ -289,7 +309,6 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         reference_df = pd.DataFrame(list(reference.items()), columns=["Column", "Description"])
 
         # Store some information about the computer and script
-        from .. import __version__
         system_info = {
             "File Tracked": str(datetime.now().replace(microsecond=0)),
             "OS": platform.system(),
@@ -298,7 +317,6 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             "Processor": platform.processor(),
             "Node Name": platform.node(),
             "Python Version": platform.python_version(),
-            "hilllab Module Version": __version__
         }
         system_info_df = pd.DataFrame(list(system_info.items()), columns=["Item", "Value"])
 
@@ -347,7 +365,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     print(f'VRPNs saved to {save_path}')
 
     # Display error report information, if needed
-    if os.path.exists(error_report_path):
+    if error_report_path:
         print('ALERT: One or more errors were encounterd during tracking.')
         print('       Please view the error report linked below.')
 

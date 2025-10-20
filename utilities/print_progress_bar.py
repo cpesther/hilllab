@@ -22,7 +22,12 @@ def print_progress_bar(progress, total, title, multiple=1, bar_length=50):
 
         # Calculate percent progress and the corresponding filled length
         percent = progress / total
-        filled_length = int(bar_length * percent)
+
+        # This makes sure it fills completely
+        if percent >= 98:
+            filled_length = bar_length + 1
+        else:
+            filled_length = int(bar_length * percent)
 
         # Create the bar and print it
         time_value = str(datetime.now().time().replace(microsecond=0))

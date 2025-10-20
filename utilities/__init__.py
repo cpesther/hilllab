@@ -27,6 +27,9 @@ from .record_cpu_usage import record_cpu_usage
 from .cache_clear import cache_clear
 from .cache_view import cache_view
 
+# File interactions
+from .load_matlab import load_matlab
+
 # We also need to do some initialization of the location where certain
 # analytics and logging data is stored. We'll do that here. 
 
