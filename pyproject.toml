@@ -19,6 +19,7 @@ dependencies = [
     "scikit_learn==1.4.2",
     "scipy==1.16.2",
     "trackpy==0.7",
+    "opencv-python==4.7.0.72",
     "setuptools==69.5.1"
 ]
 
