@@ -29,5 +29,7 @@ classifiers = [
     "Intended Audience :: Science/Research"
 ]
 
-[tool.setuptools]
-packages = ["hilllab"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hilllab*"]
+
