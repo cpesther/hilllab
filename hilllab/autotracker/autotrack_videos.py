@@ -163,7 +163,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         if os.path.exists(vrpn_save_path) and skip_existing:
             print(f'{vrpn_save_name} already exists. Skipping this video.')
             skip_counter += 1
-            break
+            continue
 
         # Open the file and convert to grayscale
         print(f'Loading video...')
