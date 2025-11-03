@@ -202,12 +202,13 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             print(f'Unable to link beads in {file}')
             
             # Create an error report file
-            error_report_path = _create_note(folder_path=video_path, file_name='Error Report', 
-                                     boilerplate='tracking_error')
+            # xxx temporarily disableda
+            #error_report_path = _create_note(folder_path=video_path, file_name='Error Report', 
+            #                         boilerplate='tracking_error')
             
             # Write a note to the error report file
-            report_text = f'[{file}] Exception during linking: {e}'
-            _append_note(path=error_report_path, text=report_text)
+            #report_text = f'[{file}] Exception during linking: {e}'
+            #_append_note(path=error_report_path, text=report_text)
             continue
 
         # Now with the trajectories created, let's filter out those
