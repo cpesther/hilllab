@@ -1,4 +1,5 @@
 # Christopher Esther, Hill Lab, 10/13/2025
+import os
 from pathlib import Path
 import numpy as np
 import cv2
@@ -11,8 +12,8 @@ import gc
 
 from ..utilities.print_progress_bar import print_progress_bar
 
-def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, output_format='matlab', 
-                       plot=False):
+def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, 
+                       skip_existing=True, plot=False):
 
     """
     Calculates the ciliary beat frequency (CBF) from a brightfield video 
@@ -25,8 +26,8 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, output_f
         sampling_rate (int): Frame rate of the video.
         power_threshold (int): Minimum PSD value a pixel must exceed to 
             be considered ciliated.
-        output_format (str): 'matlab' or 'none', indicating how the 
-            results should be saved.
+        skip_existing (bool): whether a video should be skipped if a 
+            MATLAB file already exists with the same name. 
         plot (bool): whether plots should be created and saved for 
             each video.
 
@@ -36,6 +37,17 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, output_f
         FFCA (float): Fraction of functional ciliated area in the video.
     """
 
+    # First we'll generate the output path so we can check whether this
+    # video has already been processed. 
+    video_path_obj = Path(video_path)
+    file_name = f'{video_path_obj.stem}_CBF_FFCA.mat'
+    output_path = video_path_obj.parent / file_name
+
+    # Skip this file if it already exists
+    if os.path.exists(output_path) and skip_existing:
+        print(f'{file_name} already exists. Skipping this video.')
+        return
+
     # Open video
     print(f'Loading {video_path}...')
     cap = cv2.VideoCapture(video_path)
@@ -44,7 +56,7 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, output_f
 
     # Calculate some details
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frame_width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     # Region of interest (ROI): full frame (can be modified for manual selection)
@@ -142,24 +154,16 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, output_f
         ax_bottom2 = fig.add_subplot(gs[1, 1])
         ax_bottom2.set_title('FFCA Map')
         ax_bottom2.imshow(ffca_map, cmap='RdGy_r')
-
-    # Save the data in the requested format
-    if output_format == 'matlab':
         
-        # Compile all the data
-        mat_dict = {
-            'freq': frequency_vector,
-            'FFCA': ffca,
-            'mens_CBF': avg_psd
-        }
+    # Compile all the data
+    mat_dict = {
+        'freq': frequency_vector,
+        'FFCA': ffca,
+        'mens_CBF': avg_psd
+    }
 
-        # Determine the path to the save file
-        video_path_obj = Path(video_path)
-        file_name = f'{video_path_obj.stem}_CBF_FFCA.mat'
-        output_path = video_path_obj.parent / file_name
-
-        # Save to MATLAB .mat file
-        savemat(output_path, mat_dict)
+    # Save to MATLAB .mat file
+    savemat(output_path, mat_dict)
 
     print('Finished processing!')
 

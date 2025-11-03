@@ -1,5 +1,6 @@
 # Christopher Esther, Hill Lab, 8/15/2025
 import os
+import gc
 import time
 import platform
 from datetime import datetime
@@ -20,10 +21,11 @@ except:
 
 from ..notes._note_manager import _create_note, _append_note
 from ..widgets.button_open_path import button_open_path
+from ..utilities.current_timestamp import current_timestamp
 
 def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
-                     invert=False, performance_mode='safe', 
+                     invert=False, performance_mode='safe', skip_existing=True,
                      return_file_details=False, bypass_confirmation=False):
 
     """
@@ -115,10 +117,11 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     print(f'Bead Color:      {tracking_text}')
     print(f'Videos Found:    {nfiles}')
 
-    confirmation = input('\nAre the values correct? (y/n): ')
-    if confirmation.upper() != 'Y':
-        print('Parameters not confirmed')
-        return
+    if not bypass_confirmation:
+        confirmation = input('\nAre the values correct? (y/n): ')
+        if confirmation.upper() != 'Y':
+            print('Parameters not confirmed')
+            return
     
     # Print a message to start
     try:
@@ -136,10 +139,14 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     
     # Create a dict for storing file details
     file_details = {}
+    skip_counter = 0
 
     # Now we can iterate over each individual movie
-    for file in flist:
+    for index, file in enumerate(flist):
 
+        # A brief status message
+        print(f'Starting tracking on video {index + 1} of {len(flist)} on {current_timestamp()}')
+        
         # Create an entry in the file details for this file
         file_details[file] = {}
         file_details[file]['file_path'] = file
@@ -148,7 +155,16 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         file_name = os.path.basename(file)
         file_details[file]['file_name'] = file_name
         print(f'Starting processing on {file_name}')
-        
+
+        # Generate the save path for the VRPN so we can determine whether this video
+        # has already been tracked and therefore skip it
+        vrpn_save_name = f'{file_name[:-4]}.vrpn.mat'
+        vrpn_save_path = os.path.join(save_path, vrpn_save_name)
+        if os.path.exists(vrpn_save_path) and skip_existing:
+            print(f'{vrpn_save_name} already exists. Skipping this video.')
+            skip_counter += 1
+            break
+
         # Open the file and convert to grayscale
         print(f'Loading video...')
         with pims.PyAVReaderIndexed(file) as reader:
@@ -336,17 +352,17 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         # Now save that container as a .vrpn.mat file
         print('\n')
         print(f'Saving results for {file}...')
-        save_name = os.path.join(save_path, f'{file_name[:-4]}.vrpn.mat')
-        savemat(save_name, vrpn, long_field_names=True)
+        
+        savemat(vrpn_save_path, vrpn, long_field_names=True)
 
         # Some final messages for this file
-        print(f'Saved {file_name} to {save_name}')
+        print(f'Saved {file_name} to {vrpn_save_path}')
 
         total_file_time = time.time() - track_start_time
         print(f'Finished processing in {total_file_time / 60} minutes!')
         
         # Save these file details to the dict
-        file_details[file]['save_name'] = save_name
+        file_details[file]['vrpn_save_path'] = vrpn_save_path
 
         # Wait one second and clear all printed outputs
         time.sleep(1)
@@ -354,6 +370,9 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             clear_output(wait=True)
         except:
             pass
+
+        # Do some manual garbage collection for tighter memory management
+        _ = gc.collect()
 
     total_batch_time = time.time() - batch_start_time
     try:
@@ -363,6 +382,9 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     print(f'Finished processing all files in {video_path}')
     print(f'Batch complete in {round(total_batch_time / 60, 2)} minutes')
     print(f'VRPNs saved to {save_path}')
+
+    if skip_counter > 1:
+        print(f'{skip_counter} videos were skipped since VRPNs already existed.')
 
     # Display error report information, if needed
     if error_report_path:

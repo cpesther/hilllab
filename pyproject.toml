@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hilllab"
-version = "1.1.2.251027"
+version = "1.1.2.251103"
 description = "Code used in the David Hill Lab in the Marsico Lung Institute at UNC-CH"
 authors = [{name = "Christopher Esther", email = "Christopher_Esther@med.unc.edu"}]
 readme = "README.md"

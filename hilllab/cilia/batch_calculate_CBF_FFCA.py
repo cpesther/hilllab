@@ -11,7 +11,8 @@ except:
     pass
 
 
-def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5, output_format='matlab'):
+def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
+                             skip_existing=True, bypass_confirmation=False):
 
     """
     Runs the calculate_CBF_FFCA function on a batch of videos. 
@@ -19,6 +20,13 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5, output_f
     ARGUMENTS:
         path (string): a path to a folder containing the AVI videos that
             should be processed.
+        sampling_rate (int): Frame rate of the video.
+        power_threshold (int): Minimum PSD value a pixel must exceed to 
+            be considered ciliated.
+        skip_existing (bool): whether a video should be skipped if a 
+            MATLAB file already exists with the same name. 
+        bypass_confirmation (bool): allows the function to skip the 
+            confirmation step that typically requires user input. 
     """
 
     # Walk the provided directory to determine the total number of files
@@ -35,7 +43,11 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5, output_f
     print(f'Power Threshold: {power_threshold}')
     print(f'Videos Found:    {len(flist)}')
 
-    confirmation = input('\nAre the values correct? (y/n): ')
+    if bypass_confirmation:
+        confirmation = 'Y'
+    else:
+        confirmation = input('\nAre the values correct? (y/n): ')
+
     if confirmation.upper() != 'Y':
         print('Parameters not confirmed')
         return
@@ -49,11 +61,15 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5, output_f
     # Run the calculation on each video
     start_time = current_timestamp()
     print(f'Started batch CBF/FFCA on {start_time}')
-    for video_path in flist:
+    for index, video_path in enumerate(flist):
+
+        # Brief status message
+        print(f'Starting video {index + 1} of {len(flist)} on {current_timestamp()}')
 
         # Run the calculations
         calculate_CBF_FFCA(video_path=video_path, sampling_rate=sampling_rate, 
-                           power_threshold=power_threshold, output_format=output_format)
+                           power_threshold=power_threshold,
+                           skip_existing=skip_existing)
         
         # Do some manual garbage collection for tighter memory management
         _ = gc.collect()
