@@ -211,7 +211,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             #_append_note(path=error_report_path, text=report_text)
 
             # Delete all references and ditch the calculation
-            del fv, particle_positions, t
+            del fv, particle_positions
             _ = gc.collect()
 
             continue
