@@ -209,6 +209,11 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             # Write a note to the error report file
             #report_text = f'[{file}] Exception during linking: {e}'
             #_append_note(path=error_report_path, text=report_text)
+
+            # Delete all references and ditch the calculation
+            del fv, particle_positions, t
+            _ = gc.collect()
+
             continue
 
         # Now with the trajectories created, let's filter out those
@@ -372,7 +377,10 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         except:
             pass
 
-        # Do some manual garbage collection for tighter memory management
+        # Do some manual memory management
+        # Delete all our big variables
+        del fv, particle_positions, t, t1, t2, t3, part_pos_lookup, vrpn_out
+
         _ = gc.collect()
 
     total_batch_time = time.time() - batch_start_time
