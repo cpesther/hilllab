@@ -6,7 +6,7 @@ from ..utilities.current_timestamp import current_timestamp
 from ..utilities.print_dict_table import print_dict_table
 
 try:
-    from IPython.display import clear_output, display
+    from IPython.display import clear_output
 except:
     pass
 
