@@ -22,7 +22,7 @@ def _plate_remove_overflows(input_data):
 
     # Create a new dataframe to store the results
     no_overflow_data = pd.DataFrame(columns=input_data.columns)
-
+    
     # And create a dataframe to store metadata about where any overflow
     # values occur
     overflow_meta = pd.DataFrame(columns=['Column', 'Read', 'Table Row', 
@@ -38,7 +38,7 @@ def _plate_remove_overflows(input_data):
         for index, value in enumerate(one_column):
             
             # If the value is alphabetical (i.e. not a number)
-            if bool(re.search(r'[a-zA-Z]', str(value))) == True:
+            if bool(re.search(r'[a-zA-Z]', str(value))):
 
                 # Pull the next 10 values from the array as potential replacements
                 potential_replacements = one_column[index + 1:index + 11]
@@ -50,7 +50,7 @@ def _plate_remove_overflows(input_data):
                 for one_replacement in potential_replacements:
 
                     # If the value is not alphabetical, it't the chosen one
-                    if not str(one_replacement).isalpha():
+                    if not re.search(r'[a-zA-Z]', str(one_replacement)):
                         chosen_replacement = one_replacement
                         break
 

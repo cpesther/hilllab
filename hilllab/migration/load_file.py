@@ -113,7 +113,7 @@ def load_file(path, data_type='SPE', extended=False, **kwargs):
         # If the provided data_type doesn't match any known one
         else:
             valid_types = ['TEC', 'SPE', 'PRE']
-            print(f'ERROR: Unrecognized data type')
+            print('ERROR: Unrecognized data type')
             print(f'       Valid types include {valid_types}')           
             return
     
