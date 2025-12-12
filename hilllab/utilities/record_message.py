@@ -1,4 +1,4 @@
-# Christopher Esther, 08/15/2025
+# Christopher Esther, Hill Lab, 8/15/2025
 from datetime import datetime
 from IPython.display import clear_output
 

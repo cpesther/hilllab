@@ -1,4 +1,4 @@
-# Christopher Esther, 10/06/2025
+# Christopher Esther, Hill Lab, 10/6/2025
 
 def print_dict_table(dict, title, gap=4, line='-'):
 
@@ -39,7 +39,7 @@ def print_dict_table(dict, title, gap=4, line='-'):
         key_buffer = max_key_len - len(str(key))
         value_buffer = max_value_len - len(str(value))
         n_spacing = key_buffer + gap + shift + value_buffer
-        print(f'{key}{' '*n_spacing}{value}')
+        print(f"{key}{' '*n_spacing}{value}")
     
     # Print the footer line
     print(f'{line*width}')

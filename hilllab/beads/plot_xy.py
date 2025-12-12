@@ -6,7 +6,7 @@ from scipy.io import loadmat
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_xy(path, save=False, label_beads=True, bead=None):
+def plot_xy(path, save=False, label_beads=True, bead=None, ax=None):
 
     """
     Plots the XY position of every bead in a VRPN file. If a path directly
@@ -39,7 +39,10 @@ def plot_xy(path, save=False, label_beads=True, bead=None):
         
         # Load the data and init the plot
         data = pd.DataFrame(loadmat(file)['tracking']['spot3DSecUsecIndexFramenumXYZRPY'][0][0])
-        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        # Use provided axes, otherwise create one
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(12, 8))
 
         # If only one bead was requested
         all_beads = np.unique(data[2]).astype(int)
@@ -72,3 +75,4 @@ def plot_xy(path, save=False, label_beads=True, bead=None):
             save_path = os.path.join(os.path.dirname(file), f'{Path(file).stem}.png')
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             
+    return ax

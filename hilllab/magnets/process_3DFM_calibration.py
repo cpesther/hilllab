@@ -7,16 +7,43 @@ import os
 import pandas as pd
 from scipy.signal import find_peaks
 from scipy.io import loadmat
+import pickle
 
-from ._get_pole_tip import _get_pole_tip
-from ..magnets._calculate_origin_from_lines import _calculate_origin_from_lines
-from ..magnets._remove_wide_angles import _remove_wide_angles
-from ..magnets._calculate_force_distance import _calculate_force_distance
-from ..utilities.print_progress_bar import print_progress_bar
+# These neighboring imports are desinged to work both within the hilllab
+# module and when the function is being run as a loose script.
+try:
+    from ._get_pole_tip import _get_pole_tip
+except ImportError:
+    from _get_pole_tip import _get_pole_tip
+
+try:
+    from ..magnets._calculate_origin_from_lines import _calculate_origin_from_lines
+except ImportError:
+    from magnets._calculate_origin_from_lines import _calculate_origin_from_lines
+
+try:
+    from ..magnets._remove_wide_angles import _remove_wide_angles
+except ImportError:
+    from magnets._remove_wide_angles import _remove_wide_angles
+
+try:
+    from ..magnets._calculate_force_distance import _calculate_force_distance
+except ImportError:
+    from magnets._calculate_force_distance import _calculate_force_distance
+
+try:
+    from ..utilities.print_progress_bar import print_progress_bar
+    show_progress = True
+except ImportError:
+    from utilities.print_progress_bar import print_progress_bar
+    show_progress = True
+else:
+    show_progress = False
+
 
 def process_3DFM_calibration(video_path, voltage_path,
-                             bead_size_pixels=23, max_travel_pixels=5, memory=0, invert=True, 
-                             performance_mode='safe', manual_lag=-10, trajectory_fraction=0.05, 
+                             bead_size_pixels=23, trajectory_fraction=0.05, max_travel_pixels=5, 
+                             memory=0, invert=True, performance_mode='safe', manual_lag=-10, 
                              displacement_threshold=50, angle_threshold=30):
 
     """
@@ -25,7 +52,7 @@ def process_3DFM_calibration(video_path, voltage_path,
 
     ARGUMENTS:
         video_path (str): the path to the video to be processed.
-        voltage_path (str): the path to the CSV or XLSX file containing
+        voltage_path (str): the path to the matlab file containing
             the voltages and durations.
         bead_size_pixels (int, optional): Estimated diameter of the 
             particles in pixels. Default is 23.
@@ -47,9 +74,6 @@ def process_3DFM_calibration(video_path, voltage_path,
         manual_lag (int, optional): the number of frames the voltage signal
             should be shifted in addition to that calculated by the
             correlation. 
-        trajectory_fraction (float, optional): Minimum fraction of frames a 
-            particle must appear in to be retained after filtering. 
-            Default is 0.5.
         displacement_threshold (int, optional): the minimum displacement a 
             particle must exhibit to be considered "in-motion" and therefore
             be included in the force calculations. 
@@ -64,6 +88,7 @@ def process_3DFM_calibration(video_path, voltage_path,
     """
 
     # Start by loading the video
+    print('Loading video...')
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f'Cannot open video {video_path}')
@@ -100,8 +125,9 @@ def process_3DFM_calibration(video_path, voltage_path,
     # Iterate over each frame and convert to grayscale
     for i in range(num_frames):
 
-        # Show a progress bar
-        print_progress_bar(total=num_frames, progress=i+1, title='Converting to grayscale')
+        # Show a progress bar, if possible
+        if show_progress:
+            print_progress_bar(total=num_frames, progress=i+1, title='Converting to grayscale')
         ret, frame = cap.read()
         if not ret:
             break
@@ -205,6 +231,11 @@ def process_3DFM_calibration(video_path, voltage_path,
     # Min-max normalize the voltage signal
     a, b = min_velocity, max_velocity  # desired normalization range (a is min, b is max)
     n_voltage = a + (voltage - voltage.min()) * (b - a) / (voltage.max() - voltage.min())
+
+    # temp
+    with open('vals.pkl', 'wb') as f:
+        pickle.dump([velocity, n_voltage], f)
+
 
     # Perform the correlation
     corr = np.correlate(velocity, n_voltage, mode='full')  # full correlation

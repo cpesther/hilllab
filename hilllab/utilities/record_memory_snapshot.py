@@ -1,9 +1,9 @@
-# Christopher Esther, 08/15/2025
+# Christopher Esther, Hill Lab, 8/15/2025
 import tracemalloc  # for tracing memory allocations
-tracemalloc.start()  # start memory tracing
 import pickle  # for dumping memory snapshots
 from datetime import datetime
 import os
+tracemalloc.start()  # start memory tracing
 
 def record_memory_snapshot(breakpoint=None, active=True):
 

@@ -2,6 +2,7 @@
 from datetime import datetime
 import platform
 import numpy as np
+import os
 import pandas as pd
 from scipy.io import savemat  # for saving MatLab files
 
@@ -27,13 +28,13 @@ def _generate_VRPN(data, path, file_name, nframes, nparticles):
     # set the required seconds and microseconds fields to zero. The
     # PLACEHOLDER value is also used to populate some extra columns
     # in the VRPN format that we don't need to use (Z, roll, pitch, yaw)
-    SEC = 0     
+    SEC = 0
     USEC = 0
     PLACEHOLDER = [0, 0, 0, 0]
 
     # Create an array with ten columns, allocating one row for each
     # particle in every frame (pre-allocating memory is faster).
-    vrpn_out = np.zeros((len(nframes) * nparticles, 10))
+    vrpn_out = np.zeros((nframes * nparticles, 10))
 
     # Take the particle trajectories and create a pivot table
     # using the frame and particle attributes as the index. Since 
@@ -63,7 +64,7 @@ def _generate_VRPN(data, path, file_name, nframes, nparticles):
 
             # Add this data to the main VRPN array
             vrpn_out[vrpn_index, :] = [SEC, USEC, particle_index, frame_number, x, y, *PLACEHOLDER]
-            vrpn_index += 1  # bump the VRPN index so we add to the nex t row next time
+            vrpn_index += 1  # bump the VRPN index so we add to the next row next time
 
     # Now that all the data has been collected, there's some final 
     # formatting that needs to be done before export
@@ -81,19 +82,20 @@ def _generate_VRPN(data, path, file_name, nframes, nparticles):
         'Column 9': 'Pitch (unused)',
         'Column 10': 'Yaw (unused)',
     }
-    reference_df = pd.DataFrame(list(reference.items()), columns=["Column", "Description"])
+    reference_df = pd.DataFrame(list(reference.items()), columns=['Column', 'Description'])
 
     # Store some information about the computer and code
     system_info = {
-        "File Tracked": str(datetime.now().replace(microsecond=0)),
-        "OS": platform.system(),
-        "OS Version": platform.version(),
-        "Machine": platform.machine(),
-        "Processor": platform.processor(),
-        "Node Name": platform.node(),
-        "Python Version": platform.python_version(),
+        'Date Tracked': str(datetime.now().replace(microsecond=0)),
+        'OS': platform.system(),
+        'OS Version': platform.version(),
+        'Username': os.getlogin(),
+        'Machine': platform.machine(),
+        'Processor': platform.processor(),
+        'Node Name': platform.node(),
+        'Python Version': platform.python_version(),
     }
-    system_info_df = pd.DataFrame(list(system_info.items()), columns=["Item", "Value"])
+    system_info_df = pd.DataFrame(list(system_info.items()), columns=['Item', 'Value'])
 
     info = {'vrpnLogToMatlabVersion': '05.00',
             'matOutputFileName': f'{file_name}.vrpn.mat',
@@ -111,6 +113,5 @@ def _generate_VRPN(data, path, file_name, nframes, nparticles):
     # Now save that container as a .vrpn.mat file
     print('\n')
     print(f'Saving results for {file_name}...')
-    
     savemat(path, vrpn, long_field_names=True)
     return

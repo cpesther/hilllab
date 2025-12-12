@@ -29,6 +29,21 @@ from .cache_view import cache_view
 
 # File interactions
 from .load_matlab import load_matlab
+from .walk_dir import walk_dir
+
+__all__ = [
+    "format_duration",
+    "print_progress_bar",
+    "print_dict_table",
+    "current_timestamp",
+    "record_message",
+    "record_memory_snapshot",
+    "record_cpu_usage",
+    "cache_clear",
+    "cache_view",
+    "load_matlab",
+    "walk_dir"
+]
 
 # We also need to do some initialization of the location where certain
 # analytics and logging data is stored. We'll do that here. 

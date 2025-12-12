@@ -1,4 +1,4 @@
-# Christopher Esther, 08/15/2025
+# Christopher Esther, Hill Lab, 08/15/2025
 import os
 import subprocess
 import platform

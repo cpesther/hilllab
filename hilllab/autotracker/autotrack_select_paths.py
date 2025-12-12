@@ -7,8 +7,9 @@ from ..utilities.print_dict_table import print_dict_table
 
 try:
     from IPython.display import clear_output
-except:
-    pass
+    in_jupyter = True
+except ModuleNotFoundError:
+    in_jupyter = False
 
 def autotrack_select_paths():
 
@@ -19,7 +20,7 @@ def autotrack_select_paths():
 
     # Open the video path window
     print('Select a folder containing videos using the file dialog window.')
-    video_path = filedialog.askdirectory(title=f'Select a folder with videos')
+    video_path = filedialog.askdirectory(title='Select a folder with videos')
     
     # Walk that path for some verification
     flist = []  # array of obnoxiously long, full filenames
@@ -33,12 +34,10 @@ def autotrack_select_paths():
 
     # Select the save path
     print('Select a folder containing videos using the file dialog window.')
-    save_path = filedialog.askdirectory(title=f'Select a destination folder')
+    save_path = filedialog.askdirectory(title='Select a destination folder')
 
-    try:
+    if in_jupyter:
         clear_output(wait=True)
-    except:
-        pass
 
     if len(video_path) < 1:
         print('ERROR: No video path selected.')

@@ -2,25 +2,25 @@
 import os
 import gc
 import time
-from datetime import datetime
+import pandas as pd
 
 from tkinter import filedialog
-import pandas as pd
-import numpy as np  # for math and data processing
 import trackpy as tp  # for particle tracking
 import pims
 
 # This try/except allows the function to run in a non-Jupyter environment
 try:
-    from IPython.display import clear_output, display
-    import ipywidgets as widgets
-except:
-    pass
+    from IPython.display import clear_output
+    in_jupyter = True
+except ModuleNotFoundError:
+    in_jupyter = False
 
-from _generate_VRPN import _generate_VRPN
-from ..notes._note_manager import _create_note, _append_note
+from ._generate_VRPN import _generate_VRPN
 from ..widgets.button_open_path import button_open_path
 from ..utilities.current_timestamp import current_timestamp
+from ..utilities.format_duration import format_duration
+from ..utilities.print_dict_table import print_dict_table
+
 
 def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
@@ -71,15 +71,12 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         VRPN-based systems or legacy MATLAB tracking tools.
     """
 
-    # Path not created unless a reportable error occurs
-    error_report_path = None
-
     # Start by opening file browser windows for the video and save 
     # directories if they weren't provided in the arguments.
     if not video_path:
-        video_path = filedialog.askdirectory(title=f'Select a folder with videos')
+        video_path = filedialog.askdirectory(title='Select a folder with videos')
     if not save_path:
-        save_path = filedialog.askdirectory(title=f'Select a destination folder')
+        save_path = filedialog.askdirectory(title='Select a destination folder')
 
     # Make sure paths were provided
     if not video_path or not save_path:
@@ -109,12 +106,15 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         tracking_text = 'Bright spots on a black background'
 
     # Print out these paths and the input variables and require confirmation
-    print('Please confirm the parameters below:')
-    print(f'Input Folder:    {video_path}')
-    print(f'Output Folder:   {save_path}')
-    print(f'Bead Size:       {bead_size_pixels} pixels')
-    print(f'Bead Color:      {tracking_text}')
-    print(f'Videos Found:    {nfiles}')
+    print('Please confirm the parameters below\n')
+    info = {
+        'Input Folder': video_path,
+        'Output Folder': save_path,
+        'Bead Size': f"{bead_size_pixels} pixels",
+        'Bead Color': tracking_text,
+        'Videos Found': nfiles
+    }
+    print_dict_table(info, 'Parameters')
 
     if not bypass_confirmation:
         confirmation = input('\nAre the values correct? (y/n): ')
@@ -123,10 +123,9 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             return
     
     # Print a message to start
-    try:
+    if in_jupyter:
         clear_output(wait=True)  # clear all print outputs
-    except:
-        pass
+
     print('Beginning batch autotracking')
     batch_start_time = time.time()  # start a timer for the whole batch    
 
@@ -139,6 +138,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     # Create a dict for storing file details
     file_details = {}
     skip_counter = 0
+    untrackable_counter = 0
 
     # Now we can iterate over each individual movie
     for index, file in enumerate(flist):
@@ -165,14 +165,15 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             continue
 
         # Open the file and convert to grayscale
-        print(f'Loading video...')
+        print('Loading video...')
         with pims.PyAVReaderIndexed(file) as reader:
             frames = gray(reader)
             fv = [frames[fr] for fr in range(len(frames))]
+        n_frames = len(frames)
 
         # Start a time and print a message before we begin tracking
         track_start_time = time.time()  # start a timer for this video
-        print(f'Finding particle positions in frames...')
+        print('Finding particle positions in frames...')
 
         # Determine how many processes to allow TrackPy to use
         if performance_mode == 'slow':
@@ -197,36 +198,31 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         print('Linking particle positions to create trajectories')
         try:
             t = tp.link(particle_positions, max_travel_pixels, memory=memory)
-        except Exception as e:
+        except Exception:
             print(f'Unable to link beads in {file}')
-            
-            # Create an error report file
-            # xxx temporarily disableda
-            #error_report_path = _create_note(folder_path=video_path, file_name='Error Report', 
-            #                         boilerplate='tracking_error')
-            
-            # Write a note to the error report file
-            #report_text = f'[{file}] Exception during linking: {e}'
-            #_append_note(path=error_report_path, text=report_text)
+
+            # Output an empty dummy VRPN so we know this video has been tracked
+            dummy = pd.DataFrame(columns = ['y', 'x', 'mass', 'size', 'ecc', 'signal', 
+                                            'raw_mass', 'ep', 'frame', 'particle'])
+            _generate_VRPN(data=dummy, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=0)
+            untrackable_counter += 1
 
             # Delete all references and ditch the calculation
-            del fv, particle_positions
+            del fv, frames, particle_positions
             _ = gc.collect()
-
             continue
 
         # Now with the trajectories created, let's filter out those
         # that have fewer points than a given threshold (i.e. they
         # don't last long enough to be valuable).
-        try:
-            clear_output(wait=True)
-        except:
-            pass
+        if in_jupyter:
+            clear_output(wait=True)  # clear all print outputs
+
         print(f'Applying filters to {file_name}')
 
         # Calculate the minimum number of frames that a trajectory must
         # persist in order to be kept
-        frame_threshold = len(frames) * trajectory_fraction
+        frame_threshold = n_frames * trajectory_fraction
         
         # Do the filtering in three steps
         # STEP 1: Remove trajectories that do not persist long enough
@@ -275,57 +271,46 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         print(f'Saved {file_name} to {vrpn_save_path}')
 
         total_file_time = time.time() - track_start_time
-        print(f'Finished processing in {total_file_time / 60} minutes!')
+        print(f'Finished processing in {round((total_file_time / 60), 2)} minutes!')
         
         # Save these file details to the dict
         file_details[file]['vrpn_save_path'] = vrpn_save_path
 
         # Wait one second and clear all printed outputs
         time.sleep(1)
-        try:
-            clear_output(wait=True)
-        except:
-            pass
+        if in_jupyter:
+            clear_output(wait=True)  # clear all print outputs
 
         # Do some manual memory management
         # Delete all our big variables
-        del fv, particle_positions, t, t1, t2, t3, part_pos_lookup, vrpn_out
+        del fv, particle_positions, t, t1, t2, t3
 
         _ = gc.collect()
 
     total_batch_time = time.time() - batch_start_time
-    try:
-        clear_output(wait=True)
-    except:
-        pass
-    print(f'Finished processing all files in {video_path}')
-    print(f'Batch complete in {round(total_batch_time / 60, 2)} minutes')
-    print(f'VRPNs saved to {save_path}')
+    
+    if in_jupyter:
+        clear_output(wait=True)  # clear all print outputs
+
+    # Create some print messages
+    completion = {
+        'Input Folder': video_path,
+        'Output Folder': save_path,
+        'Duration': format_duration(total_batch_time),
+        'Already Tracked': skip_counter,
+        'Untrackable': untrackable_counter
+    }
+    print_dict_table(completion, 'Tracking Complete')
 
     if skip_counter > 1:
         print(f'{skip_counter} videos were skipped since VRPNs already existed.')
 
-    # Display error report information, if needed
-    if error_report_path:
-        print('ALERT: One or more errors were encounterd during tracking.')
-        print('       Please view the error report linked below.')
-
-        # Try to create a button if in Jupyter, otherwise just print
-        try:
-            button_open_path(file_path = error_report_path, text='Open Error Report', 
-                             button_color='darkred', text_color='white')
-        except:
-            print(error_report_path)
-
     # Display buttons to navigate to relevant folders
-    try:
-        videos_button = button_open_path(file_path = video_path, text='Open Videos Folder', 
-                                         button_color='dodgerblue', width=200)
-        vrpns_button = button_open_path(file_path = save_path, text='Open VRPNs Folder', 
-                                        button_color='darkorange', width=200)
-        display(widgets.HBox([vrpns_button, videos_button]))
-    except:
-        pass
+    if in_jupyter:
+        button_open_path(file_path = video_path, text='Open Videos Folder', 
+                            button_color='dodgerblue', width=200)
+        button_open_path(file_path = save_path, text='Open VRPNs Folder', 
+                            button_color='darkorange', width=200)
 
     if return_file_details:
         return file_details

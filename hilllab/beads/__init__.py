@@ -9,3 +9,5 @@ specific to any certain assay.
 from .plot_component_trace import plot_component_trace
 from .plot_xy import plot_xy
 from .plot_xy_maximize import plot_xy_maximize
+
+__all__ = ['plot_component_trace', 'plot_xy', 'plot_xy_maximize']
