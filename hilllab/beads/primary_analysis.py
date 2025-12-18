@@ -3,12 +3,14 @@ import pandas as pd
 from scipy.io import loadmat
 import numpy as np
 import uuid
+from sklearn.decomposition import PCA
+from scipy.signal import savgol_filter
 
 def primary_analysis(path, fps, pixel_width):
 
     """
-    Performs a bunch of different (and fast) calculations on a VRPN file
-    whose results can be used for a variety of different other calculations. 
+    Performs a bunch of calculations on a VRPN file whose results can be 
+    used for a variety of different other calculations. 
 
     Parameters returned for each particle include:
     - particle_id: copied over from the VRPN
@@ -279,6 +281,40 @@ def primary_analysis(path, fps, pixel_width):
         # Append the particle data to the list
         all_particle_data_dfs.append(pd.DataFrame([particle_data]))
 
+        # Calculate the PCA of the coordinate data
+        # Format data for PCA and interpolate missing values
+        xy_data = one_particle_VRPN[['x', 'y']].interpolate(method='linear')
+
+        # Run PCA
+        pca = PCA(n_components=1)
+        pca.fit(xy_data)
+
+        # Extract the first principal axis (a 2-element vector) and normalize
+        axis = pca.components_[0]
+        axis = axis / np.linalg.norm(axis)
+
+        # Project xy data onto the axis from the PCA
+        centered = xy_data - xy_data.mean()
+        projected = centered.values @ axis
+
+        # Determine window length as 10% of signal length
+        window_length = max(int(len(projected) * 0.1), 5)  # ensure at least 5 samples
+
+        # Make window length odd
+        if window_length % 2 == 0:
+            window_length += 1
+
+        # Ensure window length > polyorder
+        polyorder = 3
+        if window_length <= polyorder:
+            window_length = polyorder + 2  # make it bigger than polyorder
+            if window_length % 2 == 0:    # still odd
+                window_length += 1
+
+        # Apply Savitzky-Golay filter
+        trend = savgol_filter(projected, window_length=window_length, polyorder=polyorder, mode='interp')
+        projected_detrend = projected - trend
+
         # At this point we'll also compile all the instantaneous data calculated
         # for this partcile into a dataframe and then save it to a dict based
         # on that particles ID number.
@@ -297,6 +333,7 @@ def primary_analysis(path, fps, pixel_width):
             'acceleration': np.append([None, None], acceleration),
             'distance': np.append(0, length_segments),
             'total_distance': np.append(0, np.cumsum(length_segments)),
+            'pca': projected_detrend,
             'path': np.repeat(path, len(x)),
             'particle_id': np.repeat(particle_id, len(x)),
             'uuid': np.repeat(uid, len(x))

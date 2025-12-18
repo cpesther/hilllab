@@ -162,6 +162,8 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         if os.path.exists(vrpn_save_path) and skip_existing:
             print(f'{vrpn_save_name} already exists. Skipping this video.')
             skip_counter += 1
+            if in_jupyter:
+                clear_output(wait=True)  # clear all print outputs
             continue
 
         # Open the file and convert to grayscale
@@ -265,7 +267,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         print('Converting and exporting data...')
 
         # This helper function is used to take care of this conversion and saving
-        _generate_VRPN(data=t3, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=n_t3)
+        _generate_VRPN(data=t3, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=n_t3)  # noqa: F821
 
         # Some final messages for this file
         print(f'Saved {file_name} to {vrpn_save_path}')
@@ -283,7 +285,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
 
         # Do some manual memory management
         # Delete all our big variables
-        del fv, particle_positions, t, t1, t2, t3
+        del fv, particle_positions, t, t1, t2, t3  # noqa: F821
 
         _ = gc.collect()
 
@@ -301,9 +303,6 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         'Untrackable': untrackable_counter
     }
     print_dict_table(completion, 'Tracking Complete')
-
-    if skip_counter > 1:
-        print(f'{skip_counter} videos were skipped since VRPNs already existed.')
 
     # Display buttons to navigate to relevant folders
     if in_jupyter:

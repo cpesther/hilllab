@@ -7,18 +7,18 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import time
 from scipy.io import savemat
-import gc
+import subprocess
 
-from ..utilities.print_progress_bar import print_progress_bar
-
-def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, 
+def calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=5, 
                        skip_existing=True, plot=False):
 
     """
     Calculates the ciliary beat frequency (CBF) from a brightfield video 
     using FFT, and determines the fraction of functional ciliated area 
     (FFCA) based on the percentage of pixels with PSDs exceeding a 
-    specified power threshold.
+    specified power threshold. This implementation uses a compiled C#
+    executable for the computationally expensive operations to speed
+    up runtimes. 
 
     ARGUMENTS:
         video_path (str): Path to the AVI video to be processed.
@@ -39,6 +39,7 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
     # First we'll generate the output path so we can check whether this
     # video has already been processed. 
     video_path_obj = Path(video_path)
+    video_folder = video_path_obj.parent
     file_name = f'{video_path_obj.stem}_CBF_FFCA.mat'
     output_path = video_path_obj.parent / file_name
 
@@ -57,6 +58,7 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fft_length = num_frames // 2 + 1
 
     # Reset cap read, just to be safe
     print('Converting to grayscale...')
@@ -73,43 +75,40 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
         # Convert frame to grayscale using OpenCV
         grayscale_frames[i] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    grayscale_frames_float = grayscale_frames.astype(np.float32)  # convert to float
+    # Import the cache folder to be used for storing bins locally
+    from ..utilities import CACHE_FOLDER_PATH
 
-    # This script is memory intensive; you're gonna see a lot of deletes so 
-    # that we can squeeze every bit of memory out of the machine that we can
-    del cap
-    del grayscale_frames
-    gc.collect()  # also force garbage collection
+    # Save the input frames to a binary file for access by the C# executable
+    input_binary_path = os.path.join(CACHE_FOLDER_PATH, 'input.bin')
+    output_binary_path = os.path.join(CACHE_FOLDER_PATH, 'psd_output.bin')
+    
+    # Save the grayscale frames to a binary file
+    print('Saving to binary...')
+    # grayscale_frames.astype(np.float32).tofile(input_binary_path)
+    
+    # Determine the path to the executable
+    current_file = Path(__file__).resolve()
 
-    # Preallocate arrays for results
-    print('Allocating memory...')
-    fft_length = num_frames // 2 + 1  # keep only first half b/c second half is redundant
-    psd_map = np.zeros((frame_height, frame_width, fft_length), dtype=np.float16)  # float16 less precise, but half the size
-    max_psd_map = np.zeros((frame_height, frame_width), dtype=np.float32)
+    # Construct path to the exe relative to this file
+    # Assuming the structure: hilllab/cilia/FFTProcessor/FFTProcessor.exe
+    executable_path = str(current_file.parent / "FFTProcessor" / "FFTProcessor.exe")
 
-    # Run the actual iteration over each time series provided
+    # Call C# executable
+    print('Launching executable...')
     start = time.time()
-    for row in range(frame_height):  # y-coordinate
+    subprocess.run([
+        executable_path,
+        str(input_binary_path),
+        str(output_binary_path),
+        str(num_frames),
+        str(frame_height),
+        str(frame_width),
+        str(sampling_rate)
+    ])
 
-        # Put our progress bar here
-        print_progress_bar(progress=row, total=frame_height, title='Performing FFT', multiple=2)
-        
-        for column in range(frame_width):  # x-coordinate
-            
-            # Calculate the FFT
-            pixel_ts = grayscale_frames_float[:, row, column]  # pull the time series
-            norm_pixel_ts = pixel_ts - np.mean(pixel_ts)       # normalize it to its mean
-            fft_result = np.fft.fft(norm_pixel_ts) 
-            fft_result_trimmed = fft_result[:fft_length]       # take only first half
-
-            # Calculate the PSD
-            psd = (1 / (num_frames * sampling_rate)) * np.abs(fft_result_trimmed) ** 2
-            psd[1:-1] *= 2  # correct amplitude for 1-sided PSD
-            psd[:15] = 0    # remove very low frequencies
-
-            # Save the data 
-            psd_map[row, column, :] = psd
-            max_psd_map[row, column] = np.max(psd)
+    # Load PSD map after execution
+    psd_map = np.fromfile(output_binary_path, dtype=np.float32).reshape(frame_height, frame_width, fft_length)
+    max_psd_map = np.max(psd_map, axis=2)
 
     print(f'\nFinished FFT analysis in {round(time.time() - start, 2)} seconds')
 
@@ -159,6 +158,9 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
 
     # Save to MATLAB .mat file
     savemat(output_path, mat_dict)
+
+    # Delete bin files from cache
+    # xxx
 
     print('Finished processing!')
 

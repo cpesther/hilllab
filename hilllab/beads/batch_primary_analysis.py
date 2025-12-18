@@ -47,6 +47,10 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True):
     for sub_index, subfolder in enumerate(folders.keys()):
         vrpn_files = folders[subfolder]  # get the paths within this subfolder
 
+        # temp stopper xxx
+        if processing_count > 89:
+            break
+
         # Create some variables to store the results
         summary_data_dfs = []
         inst_data_dfs_sub = []
@@ -101,10 +105,13 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True):
             compiled_data.to_excel(writer, sheet_name='summary', index=False)
 
         # Save to H5 as well for faster access
-        compiled_data.to_hdf(compiled_h5_path, key='summary', mode='w', format='table')
+        compiled_data.to_hdf(compiled_h5_path, key='summary', mode='w', format='table',
+                             data_columns=['uuid', 'path', 'particle_id'])
 
         # Save all the instantaneous data to a H5 file for later access
         # First we must clean up any None values into NaNs
         compiled_instantaneous = compiled_instantaneous.map(lambda x: np.nan if x is None else x)
         inst_data_h5_path = os.path.join(folder_path, f'{compiled_name}.positions.h5')
-        compiled_instantaneous.to_hdf(inst_data_h5_path, key='positions', mode='w', format='table')
+        compiled_instantaneous.to_hdf(inst_data_h5_path, key='positions',
+                                       mode='w', format='table',
+                                       data_columns=['uuid', 'path', 'particle_id'])

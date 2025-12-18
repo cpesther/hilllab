@@ -1,0 +1,32 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hilllab", "hilllab", "{397E021B-02E1-051F-439D-360544EA1E30}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cilia", "cilia", "{FF9CE222-F58A-92AF-1037-882BC31BC90C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFTProcessor", "hilllab\cilia\FFTProcessor\FFTProcessor.csproj", "{86A5CD71-5887-A22C-DFB3-F1CA2D605E18}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86A5CD71-5887-A22C-DFB3-F1CA2D605E18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86A5CD71-5887-A22C-DFB3-F1CA2D605E18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86A5CD71-5887-A22C-DFB3-F1CA2D605E18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86A5CD71-5887-A22C-DFB3-F1CA2D605E18}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FF9CE222-F58A-92AF-1037-882BC31BC90C} = {397E021B-02E1-051F-439D-360544EA1E30}
+		{86A5CD71-5887-A22C-DFB3-F1CA2D605E18} = {FF9CE222-F58A-92AF-1037-882BC31BC90C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {968C8D09-EF50-4215-A660-BAF1D07F2169}
+	EndGlobalSection
+EndGlobal

@@ -182,3 +182,10 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# C# project artifacts
+bin/
+obj/
+*.user
+*.suo
+*.vs/

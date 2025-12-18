@@ -62,7 +62,7 @@ else:  # Linux/Unix
 # Create the path to the app data folder
 # This variable will be referenced by other 'record_' functions so that
 # they know where to write their data.
-APP_DATA_FOLDER = os.path.join(base, 'particlehill')
+APP_DATA_FOLDER = os.path.join(base, 'hilllab')
 
 # If this folder doesn't already exist...
 if not os.path.exists(APP_DATA_FOLDER):
@@ -87,3 +87,8 @@ os.makedirs(SNAPSHOT_FOLDER_PATH, exist_ok=True)
 cpu_folder_name = f'cpu_{current_datetime}'
 CPU_FOLDER_PATH = os.path.join(APP_DATA_FOLDER, cpu_folder_name)
 os.makedirs(CPU_FOLDER_PATH, exist_ok=True)
+
+# Create a folder to cache various items
+cache_folder_name = f'cache_{current_datetime}'
+CACHE_FOLDER_PATH = os.path.join(APP_DATA_FOLDER, cache_folder_name)
+os.makedirs(CACHE_FOLDER_PATH, exist_ok=True)

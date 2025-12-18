@@ -7,7 +7,7 @@ from ..utilities.current_timestamp import current_timestamp
 # This try/except allows the function to run in a non-Jupyter environment
 try:
     from IPython.display import clear_output
-except:
+except Exception:
     pass
 
 
