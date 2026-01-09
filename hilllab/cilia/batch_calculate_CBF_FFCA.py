@@ -2,6 +2,7 @@
 import os
 import gc
 from ..cilia.calculate_CBF_FFCA import calculate_CBF_FFCA
+from ..cilia.calculate_CBF_FFCA_cs import calculate_CBF_FFCA_cs
 from ..utilities.current_timestamp import current_timestamp
 
 # This try/except allows the function to run in a non-Jupyter environment
@@ -10,9 +11,8 @@ try:
 except Exception:
     pass
 
-
-def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
-                             skip_existing=True, bypass_confirmation=False):
+def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='compiled', power_threshold=1,
+                             skip_existing=True, bypass_confirmation=False, delete_process_files=True):
 
     """
     Runs the calculate_CBF_FFCA function on a batch of videos. 
@@ -21,6 +21,10 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
         path (string): a path to a folder containing the AVI videos that
             should be processed.
         sampling_rate (int): Frame rate of the video.
+        method (string): either 'python' or 'compiled'. If python, the 
+            calculations will be performed by the pure Python code. If 
+            'compiled', the calculations will be performed by the 
+            compiled C# executable included in this module. 
         power_threshold (int): Minimum PSD value a pixel must exceed to 
             be considered ciliated.
         skip_existing (bool): whether a video should be skipped if a 
@@ -28,6 +32,12 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
         bypass_confirmation (bool): allows the function to skip the 
             confirmation step that typically requires user input. 
     """
+
+    # Verify the method argument
+    if method not in ['python', 'compiled']:
+        print(f'ERROR: {method} is not a valid method value')
+        print("Please select either 'python' or 'compiled'")
+        return
 
     # Walk the provided directory to determine the total number of files
     flist = []  # array of obnoxiously long, full filenames
@@ -39,6 +49,7 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
     # Print out these paths and the input variables and require confirmation
     print('Please confirm the parameters below:')
     print(f'Input Folder:    {path}')
+    print(f'Method:          {method}')
     print(f'Sampling Rate:   {sampling_rate} Hz (fps)')
     print(f'Power Threshold: {power_threshold}')
     print(f'Videos Found:    {len(flist)}')
@@ -55,7 +66,7 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
     # Print a message to start
     try:
         clear_output(wait=True)  # clear all print outputs
-    except:
+    except Exception:
         pass
 
     # Run the calculation on each video
@@ -66,18 +77,23 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, power_threshold=5,
         # Brief status message
         print(f'Starting video {index + 1} of {len(flist)} on {current_timestamp()}')
 
-        # Run the calculations
-        calculate_CBF_FFCA(video_path=video_path, sampling_rate=sampling_rate, 
-                           power_threshold=power_threshold,
-                           skip_existing=skip_existing)
+        # Run the calculations with the selected method
+        if method == 'python':
+            calculate_CBF_FFCA(video_path=video_path, sampling_rate=sampling_rate, 
+                               power_threshold=power_threshold, skip_existing=skip_existing)
         
+        else:
+            calculate_CBF_FFCA_cs(video_path=video_path, sampling_rate=sampling_rate, 
+                                  power_threshold=power_threshold,
+                                  skip_existing=skip_existing, delete_process_files=delete_process_files)
+
         # Do some manual garbage collection for tighter memory management
         _ = gc.collect()
 
         # Try to clear the Jupyter output
         try:
             clear_output(wait=True)
-        except:
+        except Exception:
             pass
 
     print(f'Started batch CBF/FFCA on {start_time}')

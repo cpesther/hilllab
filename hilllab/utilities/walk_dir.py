@@ -22,15 +22,8 @@ def walk_dir(path, type=None):
         # Iterate over every file in the walk
         for file in files:
 
-            # If a type is specified
-            if type is not None:
-
-                # Only append if it matches
-                if file.endswith(type):
-                    flist.append(os.path.join(root, file))
-
-            # If no type specified, append without filtering
-            else:
+            # Only append if it matches
+            if file.endswith(type):
                 flist.append(os.path.join(root, file))
                 
     return flist

@@ -18,6 +18,7 @@ def primary_analysis(path, fps, pixel_width):
     - death_frame: last tracked frame number
     - birth_seconds: first tracked frame number
     - death_seconds: last tracked frame number
+
     - lifetime_frames: number of frames for which it is present
     - lifetime_range_frames: death frame minus birth frame
     - lifetime_seconds: number of seconds in its lifetime for which it is present
@@ -77,7 +78,15 @@ def primary_analysis(path, fps, pixel_width):
     - min_acceleration: the minimum acceleration
     - max_acceleration: the maximum acceleration
 
+    - linearity: the linearity of the particle's movement
     - bb_area: the area of this particles track's bounding box
+
+    - alignment_deg: the angle of the primary direction of motion in degrees
+    - alignment_rad: the angle of the primary direction of motion in radians
+    - alignment_strength: the strength of the alignment from 0.5 to 1.0
+    
+    - path: the path to the VRPN from which this bead originated
+    - uuid: a unique identifier assigned to this bead
     
     Additionally, the function calculates and returns certain instantaneous
     values for each particle, including:
@@ -85,8 +94,6 @@ def primary_analysis(path, fps, pixel_width):
     - y: y position
     - angle_deg: directional change angle at each frame in degrees
     - angle_rad: directional change angle at each frame in radians
-    - dc_angle_deg: the change in the directional change angle in degrees
-    - dc_angle_rad: the change in the directional change angle in degrees
     - vx: velocity along the x axis
     - vy: velocity along the y axis
     - speed: the instantanous velocity of each particle at each frame
@@ -95,10 +102,16 @@ def primary_analysis(path, fps, pixel_width):
     - acceleration: the instantanous acceleration of each particle at each frame
     - distance: the distance traveled during this frame
     - total_distance: the cumulative distance traveled by this frame
+    - pca: the position data projected onto the primary axis from the PCA
+    - path: the path to the VRPN from which this bead originated
+    - particle_id: the particle ID in the VRPN
+    - uuid: a unique identifier assigned to this bead
 
-    Parameters calculated for the entire video:
-    - n_frames
-    - n_particles
+    Metadata calculated for the entire video:
+    - path: the path to the VRPN
+    - n_frames: the number of frames in this video
+    - fps: the sampling rate of the video in frames per second
+    - n_particles: the number of particles found in this video
 
     ARGUMENTS:
         path (string): the path to the VRPN file
@@ -108,9 +121,9 @@ def primary_analysis(path, fps, pixel_width):
             of pixels into any arbitrary unit. 
 
     RETURNS:
-        summary_data (pandas.DataFrame): a dataframe containing the
+        summary (pandas.DataFrame): a dataframe containing the
             summary data for each particle
-        all_data (dict): a dict of dataframes for the instantaneous
+        positions (dict): a dict of dataframes for the instantaneous
             data for each particle by particle ID
         metadata (dict): a few "metadata" like parameters for the entire
             video. 
@@ -132,7 +145,9 @@ def primary_analysis(path, fps, pixel_width):
 
     # Compile some metadata
     metadata = {}
+    metadata['path'] = str(path)
     metadata['n_frames'] = n_frames
+    metadata['fps'] = fps
     metadata['n_particles'] = len(all_particles)
 
     # Iterate over each bead and perform calculations
@@ -260,6 +275,7 @@ def primary_analysis(path, fps, pixel_width):
         particle_data['median_acceleration'] = np.median(acceleration)
         particle_data['std_acceleration'] = np.std(acceleration)
         particle_data['min_acceleration'] = np.min(acceleration)
+        particle_data['max_acceleration'] = np.max(acceleration)
 
         # Calculate linearity of forward progression
         mean_straight_speed = displacement / lifetime_seconds
@@ -273,13 +289,6 @@ def primary_analysis(path, fps, pixel_width):
         bb_height = y_max - y_min
         bb_area = bb_width * bb_height
         particle_data['bb_area'] = bb_area
-
-        # Also save the path to the particle row for later analysis
-        particle_data['path'] = path
-        particle_data['uuid'] = uid
-
-        # Append the particle data to the list
-        all_particle_data_dfs.append(pd.DataFrame([particle_data]))
 
         # Calculate the PCA of the coordinate data
         # Format data for PCA and interpolate missing values
@@ -297,6 +306,18 @@ def primary_analysis(path, fps, pixel_width):
         centered = xy_data - xy_data.mean()
         projected = centered.values @ axis
 
+        # Record alignment from the PCA
+        alignment_rad = np.arctan2(axis[1], axis[0]) % np.pi
+        alignment_deg = np.degrees(alignment_rad)
+        alignment_strength = pca.explained_variance_ratio_[0]
+        particle_data['alignment_deg'] = alignment_deg 
+        particle_data['alignment_rad'] = alignment_rad 
+        particle_data['alignment_strength'] = alignment_strength 
+
+        # Also save the path to the particle row for later analysis
+        particle_data['path'] = path
+        particle_data['uuid'] = uid
+
         # Determine window length as 10% of signal length
         window_length = max(int(len(projected) * 0.1), 5)  # ensure at least 5 samples
 
@@ -308,12 +329,15 @@ def primary_analysis(path, fps, pixel_width):
         polyorder = 3
         if window_length <= polyorder:
             window_length = polyorder + 2  # make it bigger than polyorder
-            if window_length % 2 == 0:    # still odd
+            if window_length % 2 == 0:     # and still odd
                 window_length += 1
 
         # Apply Savitzky-Golay filter
         trend = savgol_filter(projected, window_length=window_length, polyorder=polyorder, mode='interp')
         projected_detrend = projected - trend
+
+        # Append the particle data to the list
+        all_particle_data_dfs.append(pd.DataFrame([particle_data]))
 
         # At this point we'll also compile all the instantaneous data calculated
         # for this partcile into a dataframe and then save it to a dict based
@@ -341,7 +365,7 @@ def primary_analysis(path, fps, pixel_width):
         all_instant_data_dfs.append(instant_data)
 
     # Combine all the dfs into one
-    summary_data = pd.concat(all_particle_data_dfs).reset_index()
-    all_data = pd.concat(all_instant_data_dfs).reset_index()
+    summary = pd.concat(all_particle_data_dfs).reset_index()
+    positions = pd.concat(all_instant_data_dfs).reset_index()
     
-    return summary_data, all_data, metadata
+    return summary, positions, metadata
