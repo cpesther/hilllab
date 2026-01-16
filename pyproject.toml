@@ -33,3 +33,5 @@ classifiers = [
 where = ["."]
 include = ["hilllab*"]
 
+[tool.setuptools.package-data]
+"hilllab" = ["*.dll", "*.exe"]
