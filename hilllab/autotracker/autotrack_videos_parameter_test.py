@@ -33,7 +33,7 @@ def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21,
             will be tracked. 
 
         Note: This function does not actually use any kwargs, but it is 
-        designed to take them so that this function can accept all the 
+        designed to accept them so that this function can accept all the 
         same arguments as the actual autotrack_videos function, which 
         just makes documentation and usage a lot easier. 
     """
@@ -50,7 +50,7 @@ def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21,
         try:
             video_name = next((f for f in all_files if f.lower().endswith('.avi')), None)
             track_path = os.path.join(video_path, video_name)
-        except:
+        except Exception:
             print('ERROR: No .avi files found in this folder.')
             return
             
@@ -78,19 +78,19 @@ def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21,
     # Perform linking
     try:
         particle_positions = tp.link(f, max_travel_pixels, memory=memory)
-    except Exception as e:
-        print(f'Unable to link beads')
+    except Exception:
+        print('Unable to link beads')
 
     # Clear the display
     try:
         clear_output(wait=True)  # clear all print outputs
-    except:
+    except Exception:
         pass
 
     # Generate the annotated image
     fig, axes = plt.subplots(1, 2, figsize=(16, 8))
-    axes[0].imshow(frames[0], cmap='gray');
-    axes[1].imshow(frames[0], cmap='gray');
+    axes[0].imshow(frames[0], cmap='gray')
+    axes[1].imshow(frames[0], cmap='gray')
 
     # Define and add the circles around the particles
     radius = int(len(frames[0][0]) * 0.01)  # 1% of width
