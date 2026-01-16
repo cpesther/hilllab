@@ -1,9 +1,9 @@
 # Christopher Esther, Hill Lab, 1/16/2026
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.mixture import GaussianMixture
+import pandas as pd
 
-def classify_GMM(summary):
+def classify_GMM(summary, identifier=None):
 
     """
     Classifies beads into three clusters (stuck, oscillating, and
@@ -26,14 +26,38 @@ def classify_GMM(summary):
 
     # Fit GMM
     gmm = GaussianMixture(n_components=n_clusters, covariance_type='full', random_state=42)
-    gmm.fit(X_scaled)
+    gmm.fit(X_scaled)  # or X if not scaling
 
     # Generate cluster labels
     cluster_labels = gmm.predict(X_scaled)  # array of cluster indices for each particle
     cluster_probs = gmm.predict_proba(X_scaled)
 
-    summary['cluster'] = cluster_labels  # save cluster labels to data
+    # Convert these numerical labels to sensible strings
+    cluster_strings = {
+        0: 'stuck',
+        1: 'oscillating',
+        2: 'transiting'
+    }
+    cluster_label_strings = [cluster_strings[label] for label in cluster_labels]
 
-    # Add cluster weights into data
-    for i in range(n_clusters):
-        summary[f'cluster_{i}_weight'] = cluster_probs[:, i]
+    # Save cluster labels to data
+    summary['cluster'] = cluster_label_strings
+
+    # Save cluster weights as well
+    for cluster_number in list(cluster_strings.keys()):
+        summary[f'{cluster_strings[cluster_number]}_cluster_weight'] = cluster_probs[:, cluster_number]
+
+    # If provided with an identifier column, we can create a pivot table with this value
+    if identifier is not None:
+        cluster_pivot = pd.pivot_table(
+            summary,
+            index='cluster',       # rows
+            columns=identifier,    # columns
+            aggfunc='size',        # counts number of occurrences
+            fill_value=0           # replace NaN with 0
+        )
+
+        return summary, cluster_pivot
+    
+    else:
+        return summary, None

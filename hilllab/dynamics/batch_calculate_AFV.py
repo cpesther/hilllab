@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 
 from ..utilities.print_progress_bar import print_progress_bar
-from ..beads.calculate_AFV import calculate_AFV
+from .calculate_AFV import calculate_AFV
 
 def batch_calculate_AFV(path):
 

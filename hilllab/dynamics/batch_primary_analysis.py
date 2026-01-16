@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 from ..utilities.print_progress_bar import print_progress_bar
-from ..beads.primary_analysis import primary_analysis
+from .primary_analysis import primary_analysis
 
 def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_existing=True):
 
