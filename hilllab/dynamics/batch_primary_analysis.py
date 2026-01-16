@@ -139,3 +139,5 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
         compiled_metadata.to_hdf(compiled_h5_path, key='metadata', mode='a', format='table',
                                 data_columns=['path'])
         print('Data save completed!')
+
+    return compiled_excel_path, compiled_h5_path

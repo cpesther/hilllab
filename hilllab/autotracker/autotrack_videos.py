@@ -111,6 +111,9 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         'Input Folder': video_path,
         'Output Folder': save_path,
         'Bead Size': f"{bead_size_pixels} pixels",
+        'Trajectory Fraction': trajectory_fraction,
+        'Maximum Travel Distance': f'{max_travel_pixels} pixels',
+        'Linking Memory': f'{memory} frames',
         'Bead Color': tracking_text,
         'Videos Found': nfiles
     }

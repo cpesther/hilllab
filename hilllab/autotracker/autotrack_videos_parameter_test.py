@@ -9,7 +9,7 @@ from IPython.display import clear_output
 
 from ..utilities.print_dict_table import print_dict_table
 
-def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21, 
+def autotrack_videos_parameter_test(video_path, n_frames=1, bead_size_pixels=21, 
                                     max_travel_pixels=5, memory=0, invert=False, **kwargs):
 
     """
@@ -112,8 +112,6 @@ def autotrack_videos_parameter_test(video_path, n_frames=5, bead_size_pixels=21,
             axes[1].plot(one_particle_data['x'], one_particle_data['y'], c='#00FF00')
     else:
         # Add some prompt text
-        print(len(gray_frame))
-        print(len(gray_frame[0]))
         axes[1].text(len(gray_frame[0]) / 2, len(gray_frame) / 2, 'Set n_frames > 1 to calculate test path trace', 
                      c='#00FF00', fontsize=10, ha='center', va='center')
 
