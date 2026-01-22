@@ -21,7 +21,6 @@ from .current_timestamp import current_timestamp
 # Messages and recording
 from .record_message import record_message
 from .record_memory_snapshot import record_memory_snapshot
-from .record_cpu_usage import record_cpu_usage
 
 # Caching and appdata
 from .cache_clear import cache_clear
@@ -38,7 +37,6 @@ __all__ = [
     "current_timestamp",
     "record_message",
     "record_memory_snapshot",
-    "record_cpu_usage",
     "cache_clear",
     "cache_view",
     "load_matlab",
