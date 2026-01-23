@@ -46,6 +46,14 @@ def classify(path,file,start=0):
         dt = time_data['lifetime_seconds']/time_data['lifetime_frames']
         time = np.arange(0,time_data['lifetime_seconds'].iloc[0],dt.iloc[0])
         
+        # Failsafe in case data throws mismatch error
+        if (len(bead_data['x']) != len(bead_data['y']) 
+            or len(bead_data['x']) != len(time) 
+            or len(bead_data['y']) != len(time)):
+            print('Mismatch error; saving data. You have stopped at: \n'
+                  f'Bead index {i}/{(len(all_beads))-1} (uuid: {bead_uuid}). \n')
+            break
+        
         # Plot bead
         fig = plt.figure(figsize=(18, 8))
         gs = GridSpec(2,2,figure=fig,height_ratios=[2,1])
@@ -95,6 +103,7 @@ def classify(path,file,start=0):
             
         # Record information
         output = {
+            'index':i,
             'uuid':bead_uuid,
             'classification':classification,
             'timestamp':datetime.datetime.now(),
