@@ -2,11 +2,12 @@
 import os
 from pathlib import Path
 import numpy as np
-import pandas as pd
 import time
 import subprocess
 
-def calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1, 
+from ..cilia._resolve_CBF_FFCA import _resolve_CBF_FFCA
+
+def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1, 
                           skip_existing=True, delete_process_files=True):
 
     """
@@ -41,7 +42,7 @@ def calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
     # Skip this file if it already exists
     if os.path.exists(output_path) and skip_existing:
         print(f'{file_name} already exists. Skipping this video.')
-        return
+        return None, None
 
     # Save the input frames to a binary file for access by the C# executable
     psd_binary_path = os.path.join(video_folder, f'{video_name}_psd_map.bin')
@@ -90,24 +91,15 @@ def calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
 
     # Load maps from binaries
     psd_map = np.fromfile(psd_binary_path, dtype=np.float32).reshape(frame_height, frame_width, fft_length)
-    freq_map = np.fromfile(freq_binary_path, dtype=np.float32).reshape(frame_height, frame_width)
 
     # Now we can perform some final calcuations
     print('Performing final calculations...')
+    frequency_vector = np.linspace(0, sampling_rate / 2, num_frames // 2 + 1)
 
-    # Calculate the average frequency as the CBF value
-    flat_freq_map = freq_map.flatten()
-    cbf = np.mean(flat_freq_map)
-
-    # Calculate the percent ciliation by counting how many are above a certain
-    # power threshold (fraction of functional ciliated area). 
-    max_psd_map = np.max(psd_map, axis=2)
-    ffca = np.sum(max_psd_map > power_threshold) / max_psd_map.size
-
-    # Save the results to a dataframe and write to CSV
-    results = pd.DataFrame(data={'cbf': [cbf],'ffca': [ffca]})
-    results.to_csv(output_path)
-
+    # Resolve the actual CBF and FFCA values here
+    cbf, ffca = _resolve_CBF_FFCA(psd_map=psd_map, frequency_vector=frequency_vector,
+                                  power_threshold=power_threshold, output_path=output_path)
+    
     # Delete the binary files, if requested
     if delete_process_files:
         try:
@@ -118,4 +110,4 @@ def calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
             pass
 
     print(f'Finished processing {Path(video_path).name}')
-    return
+    return cbf, ffca

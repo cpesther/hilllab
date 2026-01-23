@@ -3,15 +3,13 @@ import os
 from pathlib import Path
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import time
-from scipy.io import savemat
 import gc
 
 from ..utilities.print_progress_bar import print_progress_bar
+from ._resolve_CBF_FFCA import _resolve_CBF_FFCA
 
-def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5, 
+def _calculate_CBF_FFCA_py(video_path, sampling_rate=60, power_threshold=5, 
                        skip_existing=True, plot=False):
 
     """
@@ -39,13 +37,13 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
     # First we'll generate the output path so we can check whether this
     # video has already been processed. 
     video_path_obj = Path(video_path)
-    file_name = f'{video_path_obj.stem}_CBF_FFCA.mat'
+    file_name = f'{video_path_obj.stem}_CBF_FFCA.csv'
     output_path = video_path_obj.parent / file_name
 
     # Skip this file if it already exists
     if os.path.exists(output_path) and skip_existing:
         print(f'{file_name} already exists. Skipping this video.')
-        return
+        return None, None
 
     # Open video
     print(f'Loading {video_path}...')
@@ -92,7 +90,7 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
     for row in range(frame_height):  # y-coordinate
 
         # Put our progress bar here
-        print_progress_bar(progress=row, total=frame_height, title='Performing FFT', multiple=2)
+        print_progress_bar(progress=row+1, total=frame_height, title='Performing FFT', multiple=2)
         
         for column in range(frame_width):  # x-coordinate
             
@@ -120,46 +118,10 @@ def calculate_CBF_FFCA(video_path, sampling_rate=60, power_threshold=5,
     # And calculate the frequency vector so we can plot the PSD nicely
     frequency_vector = np.linspace(0, sampling_rate / 2, num_frames // 2 + 1)
 
-    # Average all the PSDs together to get one PSD representative of the whole video
-    avg_psd = np.mean(psd_map, axis=(0, 1))
-
-    # Calculate the percent ciliation by counting how many are above a certain
-    # power threshold (fraction of functional ciliated area). 
-    flat_max_psds = max_psd_map.flatten()
-    ffca = np.sum(flat_max_psds > power_threshold) / flat_max_psds.size
-    ffca_map = (max_psd_map >= power_threshold).astype(int)
-
-    # Create figure (if requested)
-    if plot:
-        fig = plt.figure(figsize=(10, 8))
-        gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1])  # 2 rows, 2 columns
-
-        ax_top = fig.add_subplot(gs[0, :])
-        ax_top.plot(frequency_vector, avg_psd)
-        ax_top.set_title("Top long plot")
-        ax_top.grid(True)
-        ax_top.set_title(f'{video_path}\nCBF and FFCA')
-        ax_top.set_xlabel('Frequency (Hz)')
-        ax_top.set_ylabel('Power')
-
-        ax_bottom1 = fig.add_subplot(gs[1, 0])
-        ax_bottom1.set_title('Max PSD Power Map')
-        ax_bottom1.imshow(max_psd_map)
-
-        ax_bottom2 = fig.add_subplot(gs[1, 1])
-        ax_bottom2.set_title('FFCA Map')
-        ax_bottom2.imshow(ffca_map, cmap='RdGy_r')
-        
-    # Compile all the data
-    mat_dict = {
-        'freq': frequency_vector,
-        'FFCA': ffca,
-        'mens_CBF': avg_psd
-    }
-
-    # Save to MATLAB .mat file
-    savemat(output_path, mat_dict)
-
+    # Resolve the actual CBF and FFCA values here
+    cbf, ffca = _resolve_CBF_FFCA(psd_map=psd_map, frequency_vector=frequency_vector,
+                                  power_threshold=power_threshold, output_path=output_path)
+    
     print('Finished processing!')
 
-    return avg_psd, psd_map, ffca
+    return cbf, ffca

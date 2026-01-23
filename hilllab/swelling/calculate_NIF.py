@@ -1,9 +1,9 @@
 # Christopher Esther, Hill Lab, 11/13/2025
 import numpy as np
-from ..swelling._access_read import _access_read
 from scipy import integrate
 import pandas as pd
 
+from ..swelling._access_read import _access_read
 from ..utilities.print_progress_bar import print_progress_bar
 
 def calculate_NIF(channel_data, num_reads):

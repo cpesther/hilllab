@@ -6,8 +6,8 @@ Functions that handle calculations related to mucociliary transport
 and other ciliary kinetics. 
 """
 
-from .calculate_CBF_FFCA import calculate_CBF_FFCA
-from .calculate_CBF_FFCA_cs import calculate_CBF_FFCA_cs
+from ._calculate_CBF_FFCA_py import _calculate_CBF_FFCA_py
+from ._calculate_CBF_FFCA_cs import _calculate_CBF_FFCA_cs
 from .batch_calculate_CBF_FFCA import batch_calculate_CBF_FFCA
 
-__all__ = ['calculate_CBF_FFCA', 'batch_calculate_CBF_FFCA', 'calculate_CBF_FFCA_cs']
+__all__ = ['_calculate_CBF_FFCA_py', 'batch_calculate_CBF_FFCA', '_calculate_CBF_FFCA_cs']

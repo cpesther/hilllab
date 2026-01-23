@@ -1,8 +1,8 @@
 # Christopher Esther, Hill Lab, 10/13/2025
 import os
 import gc
-from ..cilia.calculate_CBF_FFCA import calculate_CBF_FFCA
-from ..cilia.calculate_CBF_FFCA_cs import calculate_CBF_FFCA_cs
+from ._calculate_CBF_FFCA_py import _calculate_CBF_FFCA_py
+from ._calculate_CBF_FFCA_cs import _calculate_CBF_FFCA_cs
 from ..utilities.current_timestamp import current_timestamp
 
 # This try/except allows the function to run in a non-Jupyter environment
@@ -11,7 +11,7 @@ try:
 except Exception:
     pass
 
-def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='compiled', power_threshold=1,
+def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='cs', power_threshold=1,
                              skip_existing=True, bypass_confirmation=False, delete_process_files=True):
 
     """
@@ -21,9 +21,9 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='compiled', power_th
         path (string): a path to a folder containing the AVI videos that
             should be processed.
         sampling_rate (int): Frame rate of the video.
-        method (string): either 'python' or 'compiled'. If python, the 
+        method (string): either 'py' or 'cs'. If 'py', the 
             calculations will be performed by the pure Python code. If 
-            'compiled', the calculations will be performed by the 
+            'cs', the calculations will be performed by the 
             compiled C# executable included in this module. 
         power_threshold (int): Minimum PSD value a pixel must exceed to 
             be considered ciliated.
@@ -32,12 +32,6 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='compiled', power_th
         bypass_confirmation (bool): allows the function to skip the 
             confirmation step that typically requires user input. 
     """
-
-    # Verify the method argument
-    if method not in ['python', 'compiled']:
-        print(f'ERROR: {method} is not a valid method value')
-        print("Please select either 'python' or 'compiled'")
-        return
 
     # Walk the provided directory to determine the total number of files
     flist = []  # array of obnoxiously long, full filenames
@@ -78,14 +72,17 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='compiled', power_th
         print(f'Starting video {index + 1} of {len(flist)} on {current_timestamp()}')
 
         # Run the calculations with the selected method
-        if method == 'python':
-            calculate_CBF_FFCA(video_path=video_path, sampling_rate=sampling_rate, 
+        if method == 'py':
+            _calculate_CBF_FFCA_py(video_path=video_path, sampling_rate=sampling_rate, 
                                power_threshold=power_threshold, skip_existing=skip_existing)
         
-        else:
-            calculate_CBF_FFCA_cs(video_path=video_path, sampling_rate=sampling_rate, 
+        elif method == 'cs':
+            _calculate_CBF_FFCA_cs(video_path=video_path, sampling_rate=sampling_rate, 
                                   power_threshold=power_threshold,
                                   skip_existing=skip_existing, delete_process_files=delete_process_files)
+    
+        else:
+            raise ValueError(f"'{method}' is not a valid method value")
 
         # Do some manual garbage collection for tighter memory management
         _ = gc.collect()
