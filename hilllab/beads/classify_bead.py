@@ -84,11 +84,12 @@ def classify(path,file,start=0):
         class_dict = {
             's':'stuck',
             't':'transiting',
-            'o':'oscillating'}
+            'o':'oscillating',
+            'i':'idk'}
         
         if bead_class not in class_dict:
-            print('Invalid input; skipped. \n')
-            continue
+            bead_class = 'i'
+            print('Unsure; skipped. \n')
         
         classification = class_dict[bead_class]
             
