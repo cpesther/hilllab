@@ -3,8 +3,11 @@ from matplotlib import gridspec
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
-def _resolve_CBF_FFCA(psd_map, frequency_vector, power_threshold, output_path, plot=False):
+def _resolve_CBF_FFCA(psd_map, frequency_vector, power_threshold, output_path, 
+                      method, plot=False, flag=None):
 
     """
     Takes a 3D array containing the PSDs for every pixel in a video and 
@@ -30,9 +33,16 @@ def _resolve_CBF_FFCA(psd_map, frequency_vector, power_threshold, output_path, p
     max_psd_map = np.max(psd_map, axis=2)
     ffca = np.sum(max_psd_map > power_threshold) / max_psd_map.size
 
+    # Add flags to output path, if present
+    if flag is not None:
+        flagged_name = f'{flag}_{Path(output_path).name}'
+        final_output_path = os.path.join(Path(output_path).parent, flagged_name)
+    else:
+        final_output_path = output_path
+
     # Save the results to a dataframe and write to CSV
-    results = pd.DataFrame(data={'cbf': [cbf],'ffca': [ffca]})
-    results.to_csv(output_path, index=False)
+    results = pd.DataFrame(data={'cbf': [cbf],'ffca': [ffca], 'method': [method], 'flag': [flag]})
+    results.to_csv(final_output_path, index=False)
 
     # Create figure (if requested)
     if plot:

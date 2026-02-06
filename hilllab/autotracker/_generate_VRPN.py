@@ -8,11 +8,10 @@ from scipy.io import savemat  # for saving MatLab files
 
 def _generate_VRPN(data, path, file_name, nframes, nparticles):
         
-    """
-    Generates a VRPN file for the given tracking data at the given path
+    """Generates a VRPN file for the given tracking data at the given path
     in the standard format used by our downstream MATLAB scripts. 
 
-    ARGUMENTS:
+    Args:
         data (pandas.DataFrame): the dataframe containing the particle
             trajectories.
         path (string): the path where the VRPN should be saved.

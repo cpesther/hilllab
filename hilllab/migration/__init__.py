@@ -12,8 +12,8 @@ from .plate_endpoint_calculation import plate_endpoint_calculation
 from .plate_kinetic_calculation import plate_kinetic_calculation
 from .plate_export_bundle import plate_export_bundle
 from .plate_optimize_gaussian import plate_optimize_gaussian
-from .stokes_einstein import D, eta, r, T
+from .plate_inspect import plate_inspect
 
 __all__ = [
     'Bundle', 'load_file', 'plate_endpoint_calculation', 'plate_kinetic_calculation', 
-    'plate_export_bundle', 'plate_optimize_gaussian']
+    'plate_export_bundle', 'plate_optimize_gaussian', 'plate_inspect']

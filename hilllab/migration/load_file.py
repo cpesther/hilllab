@@ -2,6 +2,8 @@
 from datetime import datetime
 import string
 import pandas as pd
+from pathlib import Path
+
 from .Bundle import Bundle
 from ._plate_format_extended import _plate_format_extended
 from ._plate_remove_overflows import _plate_remove_overflows
@@ -33,6 +35,7 @@ def load_file(path, data_type='SPE', extended=False, **kwargs):
 
     # Caps lock the data type
     data_type = data_type.upper()
+    suffix = Path(path).suffix
 
     # Create the bundle instance used to store this data
     bundle = Bundle()
@@ -41,10 +44,12 @@ def load_file(path, data_type='SPE', extended=False, **kwargs):
     try:
         if data_type == 'TEC':  # Tecan Safire II 
             
-            try:
+            if (suffix == '.xlsx') or (suffix == '.xls'):
                 loaded_data = pd.read_excel(path)
-            except:
+            elif suffix == '.csv':
                 loaded_data = pd.read_csv(path)
+            else:
+                raise IOError(f'Improper file type for datat_type {data_type}')
                     
             # Drop the last 20 rows empty of data
             loaded_data = loaded_data.iloc[:-20]
@@ -77,7 +82,7 @@ def load_file(path, data_type='SPE', extended=False, **kwargs):
             loaded_data['<>'] = (list(string.ascii_uppercase[:-10]) * int(length / 16))[:length]
             loaded_data = loaded_data.set_index('<>')
 
-        elif data_type == 'PRE':  # Pre-prepared bundle data
+        elif data_type == 'PRE':  # pre-prepared bundle data
             
             # Load the data from the excel file
             all_sheets = pd.read_excel(path, sheet_name=None)
@@ -113,17 +118,13 @@ def load_file(path, data_type='SPE', extended=False, **kwargs):
         # If the provided data_type doesn't match any known one
         else:
             valid_types = ['TEC', 'SPE', 'PRE']
-            print('ERROR: Unrecognized data type')
-            print(f'       Valid types include {valid_types}')           
-            return
+            raise ValueError(f'Unrecognized data type. Valid types include {valid_types}')
     
     except FileNotFoundError:
-        print('ERROR: No file was selected')
-        return
+        raise ValueError('No file path was provided')
     
     except UnicodeDecodeError:
-        print('ERROR: Unrecognized file type for specified data type')
-        return
+        raise ValueError(f'Unrecognized file type for specified data type {data_type}')
     
     # Make adjustments for extended data formats
     num_reads = int(loaded_data.shape[0] / 16)

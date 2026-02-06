@@ -12,7 +12,8 @@ except Exception:
     pass
 
 def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='cs', power_threshold=1,
-                             skip_existing=True, bypass_confirmation=False, delete_process_files=True):
+                             skip_existing=True, bypass_confirmation=False, delete_process_files=True,
+                             flag=None):
 
     """
     Runs the calculate_CBF_FFCA function on a batch of videos. 
@@ -74,12 +75,13 @@ def batch_calculate_CBF_FFCA(path, sampling_rate=60, method='cs', power_threshol
         # Run the calculations with the selected method
         if method == 'py':
             _calculate_CBF_FFCA_py(video_path=video_path, sampling_rate=sampling_rate, 
-                               power_threshold=power_threshold, skip_existing=skip_existing)
+                               power_threshold=power_threshold, skip_existing=skip_existing, flag=flag)
         
         elif method == 'cs':
             _calculate_CBF_FFCA_cs(video_path=video_path, sampling_rate=sampling_rate, 
                                   power_threshold=power_threshold,
-                                  skip_existing=skip_existing, delete_process_files=delete_process_files)
+                                  skip_existing=skip_existing, delete_process_files=delete_process_files,
+                                  flag=flag)
     
         else:
             raise ValueError(f"'{method}' is not a valid method value")

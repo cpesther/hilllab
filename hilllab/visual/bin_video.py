@@ -4,11 +4,16 @@ from pathlib import Path
 import os
 import numpy as np
 
-def bin_video(video_path, bin_size):
+def bin_video(video_path, bin_size, print_output=True):
 
     """
     Bins each pixel in a video into a group of a specified size, outputting
     a video of smaller dimensions.
+
+    ARGUMENTS:
+        video_path (str): the path to the video to bin
+        bin_size (int): the size of the bins of pixels
+        print_output (bool): allows printed output messages to be disabled
     """
 
     # Open the video and calculate a few things
@@ -58,5 +63,6 @@ def bin_video(video_path, bin_size):
 
     cap.release()
     writer.release()
-    print(f'Saved binned video to: {output_path}')
+    if print_output:
+        print(f'Saved binned video to: {output_path}')
     return output_path

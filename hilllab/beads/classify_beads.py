@@ -1,4 +1,4 @@
-# ellen han, 1/14/2026
+# Ellen Han, Hill Lab, 1/14/2026
 
 from pathlib import Path
 import pandas as pd
@@ -8,7 +8,8 @@ from matplotlib.gridspec import GridSpec
 import datetime 
 import getpass
 
-def classify(path,file,start=0):
+def classify_beads(path, file, start=0):
+    
     """
     Plots the XY position of beads from a .h5 file. Asks for user input
     classification of motion (stuck, transiting, oscillating) and writes

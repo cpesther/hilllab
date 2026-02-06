@@ -6,6 +6,8 @@
 
 import pandas as pd
 
+from ..utilities.print_dict_table import print_dict_table
+
 class Bundle():
 
     """This is the main container class, it contains separate class
@@ -85,12 +87,37 @@ class Data():
         self.ranges_final = pd.DataFrame()
         
         # Experimental conditions
-        self.radii_nm = 'No radii values available'  # in meters
+        self.radii_nm = 'No radii values available'  # in nanometers
         self.interval_minutes = 15  # in minutes
         self.delay_minutes = 0  # in minutes
         self.load_rate_minutes = 1.5  # in minutes
         self.temperature_K = 297  # in K
         self.method = ''
+
+
+    def show_conditions(self):
+        """Prints a summary table of the experimental conditions."""
+        
+        # Gather experimental conditions
+        conditions_dict = {}
+        conditions_dict['Extended Mode'] = self.extended
+        conditions_dict['# Reads'] = self.num_reads
+        conditions_dict['Interval (minutes)'] = self.interval_minutes
+        conditions_dict['Delay (minutes)'] = self.delay_minutes
+        conditions_dict['Load Rate (minutes)'] = self.load_rate_minutes
+        conditions_dict['Temperature (K)'] = self.temperature_K
+        conditions_dict['Method'] = self.method
+
+        print_dict_table(conditions_dict, title='Conditions')
+
+    
+    def show_radii(self):
+        """Prints a summary table of the radii in the bundle."""
+        print_dict_table(self.radii_nm, title='Radii')
+
+    
+    def show_file(self):
+        """Prints a summary table of the file details in the bundle."""
 
 
 class Results():
@@ -109,7 +136,6 @@ class Results():
         self.plate_nrmse = pd.DataFrame()
         self.plate_peak = pd.DataFrame()
 
-        # Summary/pretty print tables
-        self.plate_summary_eta = pd.DataFrame()
-        self.plate_summary_D = pd.DataFrame()
-        self.plate_summary_analysis = pd.DataFrame()
+        # Normalized results
+        self.plate_eta_norm = pd.DataFrame()
+        self.plate_D_norm = pd.DataFrame()

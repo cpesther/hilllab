@@ -30,7 +30,7 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
     # which will be automatically formatted (assuming it's space delimited)
     # instad of having to type out the data or structure it into an comma
     # delimited array. 
-    if paste_mode == True:
+    if paste_mode:
         print('Paste values in the field below.')
         input_values = input()
     
@@ -40,7 +40,7 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
         elif ' ' in input_values:
             split_values = np.array(input_values.split(' '))
             format = 'column'
-        elif delimiter != None:
+        elif delimiter is not None:
             split_values = np.array(input_values.split(delimiter))
             format = 'column'
         else:
@@ -73,7 +73,7 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
             filtered_array.append(value)
     
     # Create the Excel paste data, if requested
-    if paste_mode == True:
+    if paste_mode:
     
         # Replace the outliers with none values
         final = np.array(array)
@@ -92,7 +92,7 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
         pass
     
     # Give some print outputs, if requested
-    if info == True:
+    if info:
         print(f"{len(removed_values)} outliers removed.")
     else:
         pass

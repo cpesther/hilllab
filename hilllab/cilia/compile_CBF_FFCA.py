@@ -5,6 +5,7 @@ import os
 import numpy as np
 
 from ..utilities.walk_dir import walk_dir
+from ..utilities.print_progress_bar import print_progress_bar
 
 def compile_CBF_FFCA(folder, compile_all=True):
 
@@ -22,21 +23,25 @@ def compile_CBF_FFCA(folder, compile_all=True):
         both complete and subfolder compilations."""
         
         all_dfs = []
-        for csv in all_csvs:
+        num_csvs = len(all_csvs)
+        for i, csv in enumerate(all_csvs):
             
             # Load the data
-            data = pd.read_csv(csv, usecols=['cbf', 'ffca'])
-            
-            # Determine the name for this file
-            raw_name = Path(csv).stem
-            if '_CBF_FFCA' in raw_name:
+            if '_CBF_FFCA' in csv:
+                data = pd.read_csv(csv, usecols=['cbf', 'ffca', 'method', 'flag'])
+                
+                # Determine the name for this file
+                raw_name = Path(csv).stem
                 final_name = raw_name.replace('_CBF_FFCA', '')
+                
+                # Save the data
+                data['file'] = final_name
+                all_dfs.append(data)
             else:
-                final_name = raw_name
-            
-            # Save the data
-            data['file'] = final_name
-            all_dfs.append(data)
+                print(f'Skipped file {csv}')
+
+            # Print progress bar
+            print_progress_bar(progress=i+1, total=num_csvs, title='Compiling data...')
 
         # Compile and export the data
         compiled_data = pd.concat(all_dfs)

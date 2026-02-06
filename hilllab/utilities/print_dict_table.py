@@ -42,5 +42,5 @@ def print_dict_table(dict, title, gap=4, line='-'):
         print(f"{key}{' '*n_spacing}{value}")
     
     # Print the footer line
-    print(f'{line*width}')
+    print(f'{line * width}')
     return

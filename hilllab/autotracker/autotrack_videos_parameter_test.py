@@ -12,11 +12,10 @@ from ..utilities.print_dict_table import print_dict_table
 def autotrack_videos_parameter_test(video_path, n_frames=1, bead_size_pixels=21, 
                                     max_travel_pixels=5, memory=0, invert=False, **kwargs):
 
-    """
-    Allows the user to test autotracking parameters on a small portion
+    """Allows the user to test autotracking parameters on a small portion
     of a video's frames before running it on larger batches. 
 
-    ARGUMENTS:
+    Args:
         video_path (str): path to the video to use for testing
         n_frames (int, optional): number of frames to use during the test
             track. Defaults to 5. 
@@ -32,7 +31,8 @@ def autotrack_videos_parameter_test(video_path, n_frames=1, bead_size_pixels=21,
             will be tracked. When true, dark spots on a bright background
             will be tracked. 
 
-        Note: This function does not actually use any kwargs, but it is 
+    Note: 
+        This function does not actually use any kwargs, but it is 
         designed to accept them so that this function can accept all the 
         same arguments as the actual autotrack_videos function, which 
         just makes documentation and usage a lot easier. 

@@ -10,7 +10,7 @@ from ..utilities.print_progress_bar import print_progress_bar
 from ._resolve_CBF_FFCA import _resolve_CBF_FFCA
 
 def _calculate_CBF_FFCA_py(video_path, sampling_rate=60, power_threshold=5, 
-                       skip_existing=True, plot=False):
+                       skip_existing=True, plot=False, flag=None):
 
     """
     Calculates the ciliary beat frequency (CBF) from a brightfield video 
@@ -120,8 +120,9 @@ def _calculate_CBF_FFCA_py(video_path, sampling_rate=60, power_threshold=5,
 
     # Resolve the actual CBF and FFCA values here
     cbf, ffca = _resolve_CBF_FFCA(psd_map=psd_map, frequency_vector=frequency_vector,
-                                  power_threshold=power_threshold, output_path=output_path)
+                                  power_threshold=power_threshold, output_path=output_path,
+                                  method='py', flag=flag)
     
     print('Finished processing!')
 
-    return cbf, ffca
+    return cbf, ffca, psd_map

@@ -11,7 +11,7 @@ def plate_kinetic_calculation(path=None, bundle=None, data_type='SPE', **kwargs)
     
     """
     Calculates the best fit Gaussain curve and associated values
-    for every read in the data. 
+    for every read in the data.
     
     ARGUMENTS:
         path (str): path to the file to be loaded

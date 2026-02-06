@@ -7,8 +7,8 @@ import subprocess
 
 from ..cilia._resolve_CBF_FFCA import _resolve_CBF_FFCA
 
-def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1, 
-                          skip_existing=True, delete_process_files=True):
+def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=5, bin_size=None, 
+                          skip_existing=True, delete_process_files=True, flag=None):
 
     """
     Calculates the ciliary beat frequency (CBF) from a brightfield video 
@@ -43,8 +43,16 @@ def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
     if os.path.exists(output_path) and skip_existing:
         print(f'{file_name} already exists. Skipping this video.')
         return None, None
+    
+    # Bin the video, if requested
+    if bin_size is not None:
+        from ..visual.bin_video import bin_video
+        print(f'Binning video to {bin_size}x{bin_size} squares...')
+        final_video_path = bin_video(video_path=video_path, bin_size=bin_size)
+    else:
+        final_video_path = video_path
 
-    # Save the input frames to a binary file for access by the C# executable
+    # Create paths to binary files for sharing results from the C# executable
     psd_binary_path = os.path.join(video_folder, f'{video_name}_psd_map.bin')
     freq_binary_path = os.path.join(video_folder, f'{video_name}_freq_map.bin')
     meta_path = os.path.join(video_folder, f'{video_name}_meta.txt')
@@ -56,7 +64,7 @@ def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
     executable_path = str(current_file.parent / "FFTProcessor" / "FFTProcessor.exe")
 
     # Compile the arguments
-    arguments = [executable_path, str(video_path), str(psd_binary_path), 
+    arguments = [executable_path, str(final_video_path), str(psd_binary_path), 
                  str(freq_binary_path), str(meta_path), str(sampling_rate), 'false']
 
     # Call C# executable
@@ -80,7 +88,7 @@ def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
         print("stdout:", e.stdout)
         print("stderr:", e.stderr)
 
-    print(f'\nFinished FFT analysis in {round(time.time() - start, 2)} seconds')
+    print(f'Finished FFT analysis in {round(time.time() - start, 2)} seconds')
 
     # Load metadata from text file
     with open(meta_path, "r") as f:
@@ -98,7 +106,8 @@ def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
 
     # Resolve the actual CBF and FFCA values here
     cbf, ffca = _resolve_CBF_FFCA(psd_map=psd_map, frequency_vector=frequency_vector,
-                                  power_threshold=power_threshold, output_path=output_path)
+                                  power_threshold=power_threshold, output_path=output_path,
+                                  method='cs', flag=flag)
     
     # Delete the binary files, if requested
     if delete_process_files:
@@ -110,4 +119,4 @@ def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=1,
             pass
 
     print(f'Finished processing {Path(video_path).name}')
-    return cbf, ffca
+    return cbf, ffca, psd_map

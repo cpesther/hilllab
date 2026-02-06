@@ -6,6 +6,8 @@ import uuid
 from sklearn.decomposition import PCA
 from scipy.signal import savgol_filter
 
+from ..utilities.load_vrpn import load_vrpn
+
 def primary_analysis(path, fps, pixel_width):
 
     """
@@ -116,9 +118,7 @@ def primary_analysis(path, fps, pixel_width):
     ARGUMENTS:
         path (string): the path to the VRPN file
         fps (int): the frame rate of the video
-        pixel_width (float): if provided, distance-related 
-            values will be converted with this factor allowing the conversion
-            of pixels into any arbitrary unit. 
+        pixel_width (float): the width of the pixel in micrometers 
 
     RETURNS:
         summary (pandas.DataFrame): a dataframe containing the
@@ -130,8 +130,7 @@ def primary_analysis(path, fps, pixel_width):
     """
 
     # Load the data and isolate the components
-    data = pd.DataFrame(loadmat(path)['tracking']['spot3DSecUsecIndexFramenumXYZRPY'][0][0])
-    data.columns = ['', '', 'particle_id', 'frame', 'x', 'y', '', '', '', '']  # name the columns for sanity
+    data = load_vrpn(path)
 
     # Skip emtpy VRPNs
     if data.shape[0] == 0:

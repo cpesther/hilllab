@@ -15,11 +15,11 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
     For more details, see the primary_analysis function docstring.
 
     ARGUMENTS:
-        path (string): the path to the VRPN file
+        folder_path (string): the path to the folder containing VRPN files
+            or containing folders with VRPN files. 
         fps (int): the frame rate of the video
-        pixel_width (float): if provided, distance-related 
-            values will be converted with this factor allowing the conversion
-            of pixels into any arbitrary unit.
+        pixel_width (float): the width of a pixel in micrometers
+        
 
     RETURNS:
         Outputs a .xlsx file within each subfolder containing the
@@ -140,4 +140,7 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
                                 data_columns=['path'])
         print('Data save completed!')
 
-    return compiled_excel_path, compiled_h5_path
+        return compiled_excel_path, compiled_h5_path
+    
+    else:
+        return None, None

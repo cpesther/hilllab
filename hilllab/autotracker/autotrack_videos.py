@@ -27,8 +27,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
                      invert=False, performance_mode='safe', skip_existing=True,
                      return_file_details=False, bypass_confirmation=False):
 
-    """
-    Automatically processes and tracks particles in a batch of AVI 
+    """Automatically processes and tracks particles in a batch of AVI 
     videos.
 
     This function opens a file browser window, walks through all 
@@ -36,7 +35,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     detects and links particles using TrackPy, filters the results, 
     and saves the output as a VRPN file in the .mat format.
 
-    ARGUMENTS:
+    Args:
         video_path (str): path to the folder with videos or to a single
             video.
         save_path (str): path to the folder where VRPNs should be saved
@@ -65,7 +64,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             running autotracking. Mostly used when nested in other
             functions, defaults to false. 
 
-    OUTPUTS:
+    Returns:
         Saves one `.vrpn.mat` file per video in `save_path`. These 
         contain particle position data in a structure compatible with 
         VRPN-based systems or legacy MATLAB tracking tools.
