@@ -217,7 +217,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
         
             # Pull that read's data from the main dataframe and set up some 
             # lists to store the results
-            print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Profiling data  ')
+            print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Localizing data  ')
             one_read_data = bundle._load_read(read_number=read, type='normalized')
             one_column_peaks = []
             one_column_ranges = []

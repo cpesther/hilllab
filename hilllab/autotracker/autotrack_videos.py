@@ -27,7 +27,8 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
                      invert=False, performance_mode='safe', skip_existing=True,
                      return_file_details=False, bypass_confirmation=False):
 
-    """Automatically processes and tracks particles in a batch of AVI 
+    """
+    Automatically processes and tracks particles in a batch of AVI 
     videos.
 
     This function opens a file browser window, walks through all 
