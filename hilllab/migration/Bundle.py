@@ -54,6 +54,41 @@ class Bundle():
             return self.data.clean[read_start_index:read_end_index]
 
 
+    def __repr__(self):
+
+        # Define the contents dicts with false values first
+        keys = ['Normalization', 'Localization', 'Radii', 'Results', 'Calibration', 'Groups']
+        contents = {}
+        for key in keys:
+            contents[key] = False
+
+        # Run through a bunch of checks to see what components are included in this bundle
+        if self.data.normalized is not None:
+            contents['Normalization'] = True
+        if self.data.peaks_raw.shape[0] > 0:
+            contents['Localization'] = True
+        if self.data.radii_nm is not None:
+            contents['Radii'] = True
+        if self.results.plate_eta.shape[0] > 0:
+            contents['Results'] = True
+        if self.results.plate_eta_calib.shape[0] > 0:
+            contents['Calibration'] = True
+        if len(self.data.groups.keys()) > 0:
+            contents['Groups'] = True
+            
+        # Format this information into a string
+        display = f'---- migration.Bundle ----\nFrom: {self.data.path}\n\n'
+        for key in contents.keys():
+            whitespace = 18 - len(key)
+            if contents[key] is True:
+                status_value = '■ True'
+            else:
+                status_value = '□ False'
+            display += f"{key}{' '*whitespace}{status_value}\n"
+
+        return display
+
+
 class Data():
 
     """
@@ -70,13 +105,13 @@ class Data():
         self.num_columns = 0
         self.num_rows = 0
         self.num_reads = 0
-        self.overflow_meta = 'No overflow metadata available'
+        self.overflow_meta = None
 
         # Here are the dataframes containing the actual experimental data
-        self.raw = 'No raw data available'  # placeholders until assigned
-        self.normalized = 'No normalized data available'
-        self.clean = 'No clean data available'
-        self.average = 'No average data available'
+        self.raw = None  # placeholders until assigned
+        self.normalized = None
+        self.clean = None
+        self.average = None
 
         # Dataframes containing peak profiling and adjustment data
         self.peaks_raw = pd.DataFrame()
@@ -87,12 +122,15 @@ class Data():
         self.ranges_final = pd.DataFrame()
         
         # Experimental conditions
-        self.radii_nm = 'No radii values available'  # in nanometers
+        self.radii_nm = None  # in nanometers
         self.interval_minutes = 15  # in minutes
         self.delay_minutes = 0  # in minutes
         self.load_rate_minutes = 1.5  # in minutes
         self.temperature_K = 297  # in K
         self.method = ''
+
+        # Further analysis and visualization
+        self.groups = {}
 
 
     def show_conditions(self):
@@ -115,10 +153,6 @@ class Data():
         """Prints a summary table of the radii in the bundle."""
         print_dict_table(self.radii_nm, title='Radii')
 
-    
-    def show_file(self):
-        """Prints a summary table of the file details in the bundle."""
-
 
 class Results():
 
@@ -136,6 +170,7 @@ class Results():
         self.plate_nrmse = pd.DataFrame()
         self.plate_peak = pd.DataFrame()
 
-        # Normalized results
-        self.plate_eta_norm = pd.DataFrame()
-        self.plate_D_norm = pd.DataFrame()
+        # Calibrated results
+        self.calib_radii_nm = {}
+        self.plate_eta_calib = pd.DataFrame()
+        self.plate_D_calib = pd.DataFrame()

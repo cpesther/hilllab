@@ -3,7 +3,7 @@ from ..utilities.walk_dir import walk_dir
 from ..utilities.print_progress_bar import print_progress_bar
 from ..visual.bin_video import bin_video
 
-def batch_bin_video(folder_path, bin_size, type='avi'):
+def batch_bin_video(folder_path, bin_size, extension='avi'):
 
     """
     Runs the bin_video function on every video in a folder and its subfolders.
@@ -15,7 +15,7 @@ def batch_bin_video(folder_path, bin_size, type='avi'):
     """
 
     # List all files in directory and subfolders
-    all_videos = walk_dir(folder_path, type=type)
+    all_videos = walk_dir(folder_path, extension=extension)
 
     # Just to get it to display at 0 before iteration since each video can take a while
     print_progress_bar(progress=0, total=len(all_videos), title='Binning videos...') 

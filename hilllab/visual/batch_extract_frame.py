@@ -3,7 +3,7 @@ from ..utilities.walk_dir import walk_dir
 from ..utilities.print_progress_bar import print_progress_bar
 from ..visual.extract_frame import extract_frame
 
-def batch_extract_frame(folder_path, output_folder, frame_index=0, scale_percent=100, type='avi'):
+def batch_extract_frame(folder_path, output_folder, frame_index=0, scale_percent=100, extension='avi'):
 
     """
     Runs the extract_frame function on all videos within a folder and 
@@ -18,7 +18,7 @@ def batch_extract_frame(folder_path, output_folder, frame_index=0, scale_percent
     """
 
     # Find all videos
-    all_videos = walk_dir(folder_path, type=type)
+    all_videos = walk_dir(folder_path, extension=extension)
     n_videos = len(all_videos)
 
     # Run extraction on every video

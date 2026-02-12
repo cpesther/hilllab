@@ -37,7 +37,7 @@ def compile_primary_analysis(folder_path):
         compiled_path = test_compiled_path
 
     # Walk the directory for h5 files
-    h5_files = walk_dir(folder_path, type='h5')
+    h5_files = walk_dir(folder_path, extension='h5')
 
     # Create some arrays to save our loaded dataframes
     summary_dfs = []

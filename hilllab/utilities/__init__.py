@@ -28,6 +28,7 @@ from .cache_view import cache_view
 
 # File interactions
 from .load_matlab import load_matlab
+from .load_vrpn import load_vrpn
 from .walk_dir import walk_dir
 
 __all__ = [
@@ -40,6 +41,7 @@ __all__ = [
     "cache_clear",
     "cache_view",
     "load_matlab",
+    "load_vrpn",
     "walk_dir"
 ]
 

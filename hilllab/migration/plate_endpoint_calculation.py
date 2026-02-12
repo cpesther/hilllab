@@ -79,7 +79,7 @@ def plate_endpoint_calculation(hours=0, minutes=0, path=None, bundle=None, data_
         results_df[column] = column_results
 
     # If nested, we don't need any print statements
-    if nested == True:
+    if nested:
         return results_df
     
     # If run in isolation, format things a bit nicer
@@ -88,4 +88,4 @@ def plate_endpoint_calculation(hours=0, minutes=0, path=None, bundle=None, data_
         print(results_df)
         print('Table copied to clipboard')
         results_df.to_clipboard(excel=True)
-        return
+        return results_df

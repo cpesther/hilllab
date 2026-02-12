@@ -3,6 +3,8 @@ import os
 import gc
 import time
 import pandas as pd
+import numpy as np
+from pathlib import Path
 
 from tkinter import filedialog
 import trackpy as tp  # for particle tracking
@@ -15,7 +17,7 @@ try:
 except ModuleNotFoundError:
     in_jupyter = False
 
-from ._generate_VRPN import _generate_VRPN
+from ._generate_vrpn import _generate_vrpn
 from ..widgets.button_open_path import button_open_path
 from ..utilities.current_timestamp import current_timestamp
 from ..utilities.format_duration import format_duration
@@ -96,6 +98,15 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     else:  # if it's not a directory, then we just have one file
         flist = [video_path]
 
+    # Create the subfolders in the main output folder
+    output_folders = {}
+    for one_path in flist:
+        parent_path = Path(one_path).parent  # determine parent folder name 
+        relative_path = os.path.relpath(parent_path, video_path)  # and the relative path to the subdirectory
+        output_path = os.path.join(save_path, relative_path)  # copy that subdirectory path into the output folder
+        os.makedirs(output_path, exist_ok=True)  # create that output folder if not already existing
+        output_folders[one_path] = output_path  # save the output path for this file for later
+    
     # Calculate total number of files and print some messages
     nfiles = len(flist)
 
@@ -142,12 +153,15 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     file_details = {}
     skip_counter = 0
     untrackable_counter = 0
+    processing_times = []
 
     # Now we can iterate over each individual movie
     for index, file in enumerate(flist):
 
-        # A brief status message
+        # Some brief status messages
         print(f'Starting tracking on video {index + 1} of {len(flist)} on {current_timestamp()}')
+        if len(processing_times) > 0:
+            print(f'Averaging {np.mean(processing_times)} seconds per video')
         
         # Create an entry in the file details for this file
         file_details[file] = {}
@@ -161,7 +175,8 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         # Generate the save path for the VRPN so we can determine whether this video
         # has already been tracked and therefore skip it
         vrpn_save_name = f'{file_name[:-4]}.vrpn.mat'
-        vrpn_save_path = os.path.join(save_path, vrpn_save_name)
+        vrpn_save_folder = output_folders[file]  # pull the save path from the dict calculated earlier
+        vrpn_save_path = os.path.join(vrpn_save_folder, vrpn_save_name)
         if os.path.exists(vrpn_save_path) and skip_existing:
             print(f'{vrpn_save_name} already exists. Skipping this video.')
             skip_counter += 1
@@ -209,7 +224,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             # Output an empty dummy VRPN so we know this video has been tracked
             dummy = pd.DataFrame(columns = ['y', 'x', 'mass', 'size', 'ecc', 'signal', 
                                             'raw_mass', 'ep', 'frame', 'particle'])
-            _generate_VRPN(data=dummy, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=0)
+            _generate_vrpn(data=dummy, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=0)
             untrackable_counter += 1
 
             # Delete all references and ditch the calculation
@@ -270,7 +285,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         print('Converting and exporting data...')
 
         # This helper function is used to take care of this conversion and saving
-        _generate_VRPN(data=t3, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=n_t3)  # noqa: F821
+        _generate_vrpn(data=t3, path=vrpn_save_path, file_name=file, nframes=len(fv), nparticles=n_t3)  # noqa: F821
 
         # Some final messages for this file
         print(f'Saved {file_name} to {vrpn_save_path}')

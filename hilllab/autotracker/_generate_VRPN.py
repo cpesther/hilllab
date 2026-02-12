@@ -6,7 +6,7 @@ import os
 import pandas as pd
 from scipy.io import savemat  # for saving MatLab files
 
-def _generate_VRPN(data, path, file_name, nframes, nparticles):
+def _generate_vrpn(data, path, file_name, nframes, nparticles):
         
     """Generates a VRPN file for the given tracking data at the given path
     in the standard format used by our downstream MATLAB scripts. 

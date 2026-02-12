@@ -15,15 +15,12 @@ def plate_generate_report(bundle, groups):
     Generates and saves a summary of 1D results to an Excel file in the
     same folder as the raw data. 
 
-    Args:
+    ARGUMENTS:
         bundle (migration.Bundle): the data bundle after processing
         groups (dict): a dictionary of which columns should be grouped
             together, where the keys are the names of the groups as strings
             and the value is a list of the column numbers included in the
             group.
-
-    Returns:
-        None
     """
 
     # Determine the maximum column length for spacing
@@ -66,7 +63,7 @@ def plate_generate_report(bundle, groups):
 
         # Pull values from table and remove outliers
         eta_values = eta_table[column].to_numpy(dtype=object)
-        D_values = eta_table[column].to_numpy(dtype=object)
+        D_values = D_table[column].to_numpy(dtype=object)
         _, _, outlier_indices = remove_outliers(array=eta_values, info=False, paste_mode=False)
 
         # Replace outliers with string

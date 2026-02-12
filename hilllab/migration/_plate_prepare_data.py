@@ -5,6 +5,7 @@ import pandas as pd
 from ._plate_profile_curve import _plate_profile_curve
 from .plate_export_bundle import plate_export_bundle
 from ..utilities.print_progress_bar import print_progress_bar
+from .plate_define_radii import plate_define_radii
 
 def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radius_nm=0, 
                        interval_minutes=15, delay_minutes=0, load_rate_minutes=1.5, 
@@ -80,27 +81,9 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
     selected_column_indices = np.array(selected_column_numbers) - 1
     selected_columns = bundle.data.raw.columns.take(selected_column_indices)
 
-    # Now create our radii dict based on these columns
-    radii_nm = {}
-    if type(radius_nm) == list:
-
-        # Extend the list of radii if needed so it's the same length
-        # as the number of selected columns
-        extended_radii = np.concatenate((radius_nm, np.repeat(0, len(selected_columns) - len(radius_nm))))
-        for i, column in enumerate(selected_columns):
-            radii_nm[column] = extended_radii[i]
-
-    # If a single number was provided, apply it to all columns
-    elif type(radius_nm) == float or type(radius_nm) == int:
-        for column in selected_columns:
-            radii_nm[column] = radius_nm
-    
-    else:
-        print('ERROR: Unknown radius argument')
-        return
-    
-    # Save the radii to the bundle
-    bundle.data.radii_nm = radii_nm
+    # Now use the radii definintion function to handle creating the radii values
+    radii_nm = plate_define_radii(bundle=bundle, radius_nm=radius_nm)
+    bundle.data.radii_nm = radii_nm  # save the radii to the bundle
 
     # <<<<< NORMALIZING THE DATA >>>>>
     # This normalized data is what is used in the peak profiling process 

@@ -43,7 +43,7 @@ def plate_optimize_gaussian(bundle=None, column=None, read=None, curve=None, end
         column_number = bundle.data.clean.columns.get_loc(column)
         load_rate_minutes = bundle.data.load_rate_minutes
         delay_minutes = bundle.data.delay_minutes
-        radius_nm = bundle.data.radii_nm[column]
+        radius_nm = float(bundle.data.radii_nm[column])
         temperature_K = bundle.data.temperature_K
 
     # Now let's set up our guesses for each parameter and their 

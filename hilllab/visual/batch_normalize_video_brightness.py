@@ -3,7 +3,7 @@ from ..utilities.walk_dir import walk_dir
 from ..visual.normalize_video_brightness import normalize_video_brightness
 from ..utilities.print_progress_bar import print_progress_bar
 
-def batch_normalize_video_brightness(folder_path, type='avi', **kwargs):
+def batch_normalize_video_brightness(folder_path, extension='avi', **kwargs):
 
     """
     Performs video brightness normalization on all videos of a certain
@@ -15,7 +15,7 @@ def batch_normalize_video_brightness(folder_path, type='avi', **kwargs):
     """
 
     # Walk the folder to find all videos
-    all_videos = walk_dir(folder_path, type=type)
+    all_videos = walk_dir(folder_path, extension=extension)
     n_videos = len(all_videos)
 
     # Iterate over each video

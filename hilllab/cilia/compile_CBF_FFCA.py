@@ -51,7 +51,7 @@ def compile_CBF_FFCA(folder, compile_all=True):
         return save_path
     
     # List all CSVs
-    all_csvs = walk_dir(folder, type='csv')
+    all_csvs = walk_dir(folder, extension='csv')
 
     if compile_all:
         save_path = _compile_files(all_csvs, output_folder=folder)
@@ -66,7 +66,7 @@ def compile_CBF_FFCA(folder, compile_all=True):
         for subfolder in all_subfolders:
         
             # List the CSVs in this directory and compile on those
-            subfolder_csvs = walk_dir(subfolder, type='csv')
+            subfolder_csvs = walk_dir(subfolder, extension='csv')
             save_path = _compile_files(subfolder_csvs, output_folder=subfolder)
             save_paths.append(save_path)
 
