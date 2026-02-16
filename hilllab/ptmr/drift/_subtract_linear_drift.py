@@ -69,9 +69,11 @@ def _subtract_linear_drift(data, drift_start_time=None, drift_end_time=None):
 
         # Extract the timestamp and X and Y coordinate data only within the 
         # calculated drift indices
-        x_data = bead_data['x'][drift_indices[0]:drift_indices[-1]]
-        y_data = bead_data['y'][drift_indices[0]:drift_indices[-1]]
-        t_data = t[drift_indices[0]:drift_indices[-1]]
+        drift_start_index = drift_indices[0]
+        drift_end_index = drift_indices[-1] + 1
+        x_data = bead_data['x'][drift_start_index:drift_end_index]
+        y_data = bead_data['y'][drift_start_index:drift_end_index]
+        t_data = t[drift_start_index:drift_end_index]
         
         # Fit a linear regression to X and Y coordinates. The polyfit runtion
         # returns the slope and intercept of the linear curve.
