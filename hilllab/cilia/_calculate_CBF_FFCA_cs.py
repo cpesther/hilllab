@@ -8,7 +8,7 @@ import subprocess
 from ..cilia._resolve_CBF_FFCA import _resolve_CBF_FFCA
 
 def _calculate_CBF_FFCA_cs(video_path, sampling_rate=60, power_threshold=5, bin_size=None, 
-                          skip_existing=True, delete_process_files=True, flag=None):
+                           skip_existing=True, delete_process_files=True, flag=None):
 
     """
     Calculates the ciliary beat frequency (CBF) from a brightfield video 

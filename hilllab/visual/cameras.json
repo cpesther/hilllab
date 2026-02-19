@@ -1,0 +1,18 @@
+{
+    "GS3": {
+        "name": "GS3-U3-51S5M-C",
+        "pixel_width_um": 3.45,
+        "resolution_height": 2048,
+        "resolution_width": 2448,
+        "fps": 75,
+        "manufacturer": "FLIR Integrated Imaging Solutions, Inc."
+    },
+    "FL3": {
+        "name": "FL3-U3-13Y3M-C",
+        "pixel_width_um": 4.8,
+        "resolution_height": 1024,
+        "resolution_width": 1280,
+        "fps": 150,
+        "manufacturer": "FLIR Integrated Imaging Solutions, Inc."
+    }
+}

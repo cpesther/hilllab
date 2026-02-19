@@ -2,7 +2,7 @@
 from pathlib import Path
 from .batch_subtract_drift import batch_subtract_drift
 
-def process_vrpns(folder, camera='GS3', bead_size=1, fps=120, long_video=False, 
+def process_vrpns(folder, camera='GS3', magnification=40, bead_size=1, fps=120, long_video=False, 
                   drift_subtraction='linear', pipeline='python'):
 
     """

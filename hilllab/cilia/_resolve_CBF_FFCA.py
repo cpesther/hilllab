@@ -16,7 +16,7 @@ def _resolve_CBF_FFCA(psd_map, frequency_vector, power_threshold, output_path,
     Python calculation methods. It will also output the calculated
     values to a file, if requested. 
 
-    ARGUMENTS:
+    ARGUMENTS: TODO
         psd_map (3D array): an array containing the PSD values for every
             pixel in a video. 
     """
