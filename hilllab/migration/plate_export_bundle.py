@@ -55,6 +55,10 @@ def plate_export_bundle(bundle):
         }
         pd.DataFrame(bundle.data.radii_nm, index=[0]).to_excel(writer, sheet_name='bundle.data.radii_nm', index=False)
         pd.DataFrame(conditions).to_excel(writer, sheet_name='bundle.data.conditions', index=False)  # everything else
+        
+        # Groups and calibration columns
+        pd.DataFrame(bundle.data.groups).to_excel(writer, sheet_name='bundle.data.groups', index=False)
+        pd.DataFrame(bundle.data.calibration_columns).to_excel(writer, sheet_name='bundle.data.calibration_columns', index=False)
 
         # And the overflow metadata table
         bundle.data.overflow_meta.to_excel(writer, sheet_name='bundle.data.overflow_meta', index=False)

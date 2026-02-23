@@ -131,6 +131,7 @@ class Data():
 
         # Further analysis and visualization
         self.groups = {}
+        self.calibration_columns = {}
 
 
     def show_conditions(self):

@@ -3,6 +3,7 @@ import glob
 import os
 import cv2
 from pathlib import Path
+
 from ..utilities.print_progress_bar import print_progress_bar
 
 def images_to_video(image_folder, fps=30):

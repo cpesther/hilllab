@@ -350,7 +350,6 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
         print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Cleaning data   ')
         one_read_data = bundle._load_read(read_number=read, type='raw')
         one_read_data_cleaned = pd.DataFrame(columns=selected_columns)
-        one_read_gaussian_indices = pd.DataFrame(columns=selected_columns)
     
         # For each column in the data
         for column in selected_columns:

@@ -115,9 +115,18 @@ def load_file(path, data_type='SPE', extended=False, **kwargs):
             bundle.data.temperature_K = conditions['temperature_K'][0]
             bundle.data.method = conditions['method'][0]
 
+            # Load the gropus and calibration columns
+            bundle.data.groups = all_sheets['bundle.data.groups']
+            bundle.data.calibration_columns = all_sheets['bundle.data.calibration_columns']
+
+        # Load data that's stored in a simple, ready-to-use format with
+        # no unneeded data. This is mostly used for backend pipelines. 
+        elif data_type == 'SIM':
+            loaded_data = pd.read_excel(path).set_index('<>')
+
         # If the provided data_type doesn't match any known one
         else:
-            valid_types = ['TEC', 'SPE', 'PRE']
+            valid_types = ['TEC', 'SPE', 'PRE', 'SIM']
             raise ValueError(f'Unrecognized data type. Valid types include {valid_types}')
     
     except FileNotFoundError:
