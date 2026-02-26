@@ -9,7 +9,7 @@ import os
 from ..migration.plate_extract_result import plate_extract_result
 from ..utilities.remove_outliers import remove_outliers
 
-def plate_generate_report(bundle, groups):
+def plate_generate_report(bundle, include_calibrated=True):
 
     """
     Generates and saves a summary of 1D results to an Excel file in the
@@ -23,6 +23,14 @@ def plate_generate_report(bundle, groups):
             group.
     """
 
+    # Pull the groups
+    groups = bundle.data.groups
+
+    # Verify that groups have been assigned before continuing
+    if len(list(groups.keys())) == 0:
+        raise AttributeError('This bundle does not contain any groups. ' \
+                             'Gropus must be assigned before a report can be generated.')
+
     # Determine the maximum column length for spacing
     max_n = 0
     for key in groups.keys():
@@ -33,46 +41,86 @@ def plate_generate_report(bundle, groups):
     eta_table = pd.DataFrame({'capillary': index}).set_index('capillary')
     D_table = pd.DataFrame({'capillary': index}).set_index('capillary')
 
+    # If the bundle contains calibrated results, we also want to export those
+    if bundle.results.plate_eta_calib.shape[0] > 0:
+        calib_eta_table = pd.DataFrame({'capillary': index}).set_index('capillary')
+        calib_D_table = pd.DataFrame({'capillary': index}).set_index('capillary')
+        
+        # Force exclusion of calibrated data, if requested
+        if include_calibrated is not True:
+            calibrated = False
+        else:
+            calibrated = True
+
+    else:
+        calibrated = False
+
     # Iterate over each key in the group names
     for key in groups.keys():
 
         # Some lists to save the values in this column
         eta_values = []
         D_values = []
+        calib_eta_values = []  # fine to create these here, even if not used
+        calib_D_values = []
         
         # Iterate over every column in this group
         for column in groups[key]:
             
+            # Raw values
             eta_values.append(plate_extract_result(bundle, column, 'eta', 'mean', end_only=True, end_hours=24))
             D_values.append(plate_extract_result(bundle, column, 'D', 'mean', end_only=True, end_hours=24))
+
+            # Calibrated values, if present
+            if calibrated:
+                calib_eta_values.append(plate_extract_result(bundle, column, 'eta_calib', 'mean', end_only=True, end_hours=24))
+                calib_D_values.append(plate_extract_result(bundle, column, 'D_calib', 'mean', end_only=True, end_hours=24))
+
 
         # Append enough nan values to match length
         if len(eta_values) < max_n:
             eta_values.extend(np.repeat(None, (max_n - len(eta_values))))
             D_values.extend(np.repeat(None, (max_n - len(D_values))))
+            calib_eta_values.extend(np.repeat(None, (max_n - len(calib_eta_values))))
+            calib_D_values.extend(np.repeat(None, (max_n - len(calib_D_values))))
             
         # Save these values to their respective tables
         eta_table[key] = eta_values
         D_table[key] = D_values
+        if calibrated:
+            calib_eta_table[key] = calib_eta_values
+            calib_D_table[key] = calib_D_values
 
     # Create tables for data with outliers removed
     eta_table_clean = pd.DataFrame({'capillary': index}).set_index('capillary')
     D_table_clean = pd.DataFrame({'capillary': index}).set_index('capillary')
+    if calibrated:
+        calib_eta_table_clean = pd.DataFrame({'capillary': index}).set_index('capillary')
+        calib_D_table_clean = pd.DataFrame({'capillary': index}).set_index('capillary')
 
     for column in eta_table.columns:
 
         # Pull values from table and remove outliers
         eta_values = eta_table[column].to_numpy(dtype=object)
         D_values = D_table[column].to_numpy(dtype=object)
+        if calibrated:
+            calib_eta_values = calib_eta_table[column].to_numpy(dtype=object)
+            calib_D_values = calib_D_table[column].to_numpy(dtype=object)
         _, _, outlier_indices = remove_outliers(array=eta_values, info=False, paste_mode=False)
 
         # Replace outliers with string
         for i in outlier_indices:
             eta_values[i] = 'OUTLIER'
             D_values[i] = 'OUTLIER'
+            if calibrated:
+                calib_eta_values[i] = 'OUTLIER'
+                calib_D_values[i] = 'OUTLIER'
 
         eta_table_clean[column] = eta_values  # save to clean table
         D_table_clean[column] = D_values
+        if calibrated:
+            calib_eta_table_clean[column] = calib_eta_values
+            calib_D_table_clean[column] = calib_D_values
 
     # Determine report name and path
     report_name = f'REPORT_{Path(bundle.data.path).stem}.xlsx'
@@ -83,6 +131,12 @@ def plate_generate_report(bundle, groups):
     median_row = eta_table.shape[0] + 4
     stdev_row = eta_table.shape[0] + 5
     raw_data_row = stdev_row + 2
+    if calibrated:
+        calib_data_row = raw_data_row + eta_table.shape[0] + 6
+        disclaimer_row = calib_data_row + eta_table.shape[0] + 6
+    else:
+        disclaimer_row = stdev_row + eta_table.shape[0] + 8
+
 
     # Output data to Excel file
     with pd.ExcelWriter(report_path, engine='openpyxl') as writer:
@@ -110,6 +164,21 @@ def plate_generate_report(bundle, groups):
             sheet_name='Report',
             startcol=len(eta_table.columns) + 2
         )
+        
+        # Only output the calibrated data if its present
+        if calibrated:
+            calib_eta_table_clean.to_excel(
+                writer,
+                startrow=calib_data_row,
+                sheet_name='Report',
+            )
+
+            calib_D_table_clean.to_excel(
+                writer,
+                startrow=calib_data_row,
+                sheet_name='Report',
+                startcol=len(eta_table.columns) + 2
+            )
 
     # A helper function for convering column numbers to Excel letters
     def colnum_to_letter(n):
@@ -138,18 +207,17 @@ def plate_generate_report(bundle, groups):
     white_font = Font(color='FFFFFF', bold=True)
 
     # Loop over range of cells (for example B2:E10)
-    for row in ws['A1':f'{D_end_col}{mean_row}']:
+    for row in ws['A1':f'{D_end_col}{disclaimer_row}']:
         for cell in row:
             if cell.value == 'OUTLIER':
                 cell.fill = red_fill
                 cell.font = white_font
 
-    # Formatting titles for normalized data tables
+    # Formatting titles for clean data tables
     ws.merge_cells(f'{eta_start_col}1:{eta_end_col}1')
     ws.merge_cells(f'{D_start_col}1:{D_end_col}1')
-    ws['A1'] = 'Eta (mPa•s)'
-    ws[f'{D_start_col}1'] = 'Diffusion Coefficient (m²s)'
-
+    ws['A1'] = 'Eta (mPa•s) (clean)'
+    ws[f'{D_start_col}1'] = 'Diffusion Coefficient (m²s) (clean)'
     ws['A1'].font = Font(color='4B54CC', bold=True, size=14)
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'{D_start_col}1'].font = Font(color='4B54CC', bold=True, size=14)
@@ -161,11 +229,22 @@ def plate_generate_report(bundle, groups):
     ws.merge_cells(f'{D_start_col}{raw_data_title_row}:{D_end_col}{raw_data_title_row}')
     ws[f'{eta_start_col}{raw_data_title_row}'] = 'Eta (mPa•s) (raw)'
     ws[f'{D_start_col}{raw_data_title_row}'] = 'Diffusion Coefficient (m²s) (raw)'
-
     ws[f'{eta_start_col}{raw_data_title_row}'].font = Font(color='FF0000', bold=True, size=14)
     ws[f'{eta_start_col}{raw_data_title_row}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'{D_start_col}{raw_data_title_row}'].font = Font(color='FF0000', bold=True, size=14)
     ws[f'{D_start_col}{raw_data_title_row}'].alignment = Alignment(horizontal='center', vertical='center')
+
+    # Formatting titles for the calibrated data tables, if present
+    if calibrated:
+        calib_data_title_row = calib_data_row
+        ws.merge_cells(f'{eta_start_col}{calib_data_title_row}:{eta_end_col}{calib_data_title_row}')
+        ws.merge_cells(f'{D_start_col}{calib_data_title_row}:{D_end_col}{calib_data_title_row}')
+        ws[f'{eta_start_col}{calib_data_title_row}'] = 'Eta (mPa•s) (calibrated)'
+        ws[f'{D_start_col}{calib_data_title_row}'] = 'Diffusion Coefficient (m²s) (calibrated)'
+        ws[f'{eta_start_col}{calib_data_title_row}'].font = Font(color='36942B', bold=True, size=14)
+        ws[f'{eta_start_col}{calib_data_title_row}'].alignment = Alignment(horizontal='center', vertical='center')
+        ws[f'{D_start_col}{calib_data_title_row}'].font = Font(color='36942B', bold=True, size=14)
+        ws[f'{D_start_col}{calib_data_title_row}'].alignment = Alignment(horizontal='center', vertical='center')
 
     # Generate the blocks of summary formulas
     right_align = Alignment(horizontal='right', vertical='center')
@@ -223,15 +302,29 @@ def plate_generate_report(bundle, groups):
     write_metric_formulas(ws, eta_start_col_num, total_eta_cols, raw_data_start_row, 
                         mean_row + raw_offset, 
                         median_row + raw_offset, 
-                        stdev_row+ raw_offset)
+                        stdev_row + raw_offset)
 
     write_metric_formulas(ws, D_start_col_num, total_D_cols, raw_data_start_row, 
                         mean_row + raw_offset, 
                         median_row + raw_offset, 
                         stdev_row + raw_offset)
     
+    # If calibrated, the calibrated eta and D table
+    if calibrated:
+        calib_raw_offset = data_start_row + (eta_table.shape[0] * 2) + 9
+        calib_data_start_row = data_start_row + calib_raw_offset
+        write_metric_formulas(ws, eta_start_col_num, total_eta_cols, calib_data_start_row, 
+                            mean_row + calib_raw_offset, 
+                            median_row + calib_raw_offset, 
+                            stdev_row + calib_raw_offset)
+
+        write_metric_formulas(ws, D_start_col_num, total_D_cols, calib_data_start_row, 
+                            mean_row + calib_raw_offset, 
+                            median_row + calib_raw_offset, 
+                            stdev_row + calib_raw_offset)
+    
     # Merge cells along bottom for disclaimer message
-    disclaimer_cells = excel_row_cells(1, D_start_col_num + total_D_cols - 1, stdev_row + 2 + raw_offset)
+    disclaimer_cells = excel_row_cells(1, D_start_col_num + total_D_cols - 1, disclaimer_row)
     ws.merge_cells(f'{disclaimer_cells[0]}:{disclaimer_cells[-1]}')
     ws[disclaimer_cells[0]] = 'Report is automatically generated.'
     ws[disclaimer_cells[0]].font = Font(italic=True, size=10)

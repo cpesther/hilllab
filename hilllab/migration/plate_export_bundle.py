@@ -5,6 +5,8 @@ import time
 import pandas as pd
 import getpass
 
+from ..utilities.warning import warn
+
 def plate_export_bundle(bundle):
     
     """Exports all of the values stored in a bundle object to an Excel
@@ -14,15 +16,22 @@ def plate_export_bundle(bundle):
         bundle (migration.Bundle): the bundle object to be saved
     """
     
-    file_name = f'{Path(bundle.data.path).stem}.1dpre.xlsx'
+    file_name = f'{Path(bundle.data.path).stem}.bundle.xlsx'
     full_path = os.path.join(os.path.dirname(bundle.data.path), file_name)
 
     # Skip export if a bundle has already been exported
     if os.path.exists(full_path):
-        print('ALERT: Bundle already exists. Did not export a new one')
-        return 
+        msg = 'A bundle for this file already exists. Would you like to overwrite it?'
+        warn(msg=msg)
+        confirmation = input('Overwrite existing? [y]/n')
+
+        # Interpet decision
+        if confirmation.upper() not in ['Y', '']:
+            print('Bundle export aborted')
+            return 
 
     # Otherwise write everything to an Excel file
+    print('Exporting bundle...')
     with pd.ExcelWriter(full_path, engine='openpyxl') as writer:
 
         # Write in a little warning on the first page
@@ -59,7 +68,7 @@ def plate_export_bundle(bundle):
         
         # Groups and calibration columns
         pd.DataFrame(bundle.data.groups).to_excel(writer, sheet_name='bundle.data.groups', index=False)
-        pd.DataFrame(bundle.data.calibration_columns).to_excel(writer, sheet_name='bundle.data.calibration_columns', index=False)
+        pd.DataFrame([bundle.data.calibration_columns]).to_excel(writer, sheet_name='bundle.data.calibration_columns', index=False)
 
         # And the overflow metadata table
         bundle.data.overflow_meta.to_excel(writer, sheet_name='bundle.data.overflow_meta', index=False)

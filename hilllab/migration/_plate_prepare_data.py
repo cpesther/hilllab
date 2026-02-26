@@ -256,90 +256,11 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
 
     # Now that the data has been profiled (peak only, Gaussain range 
     # profiling comes later), we can actually make adjustments
-    # based on these saved profiles. We will first define some functions
-    # that will be used to make the necessary changes. Here's a generic 
-    # function that can be used to move an array of data when given the 
-    # location of its peak.
-    
-    def move_peak(curve_data, peak_index):
+    # based on these saved profiles. We will use some simple functions 
+    # from the cleaning submodule to make the necessary changes.
+    from .cleaning.noise import simple_shift
+    from .cleaning.peak import move_peak
         
-        """
-        Adjusts one curve of data based on the provided peak_index so 
-        the peak is located in the appropriate location (first index). 
-    
-        ARGUMENTS:
-            data (list): the array of unshifted data
-            peak_index (int): the amount that the data should be shifted
-                as given by the profile number
-        
-        RETURNS:
-            moved_array (array): array of shifted data
-        """
-    
-        # Begin by converting the peak location (aka the profile number)
-        # into a value indicating how much and in which direction we need
-        # to shift the data
-    
-        if peak_index <= 4:
-            shift = (-1 * peak_index) + 1
-    
-        # A peak location of 5 indicates an empty column, so no shifting is needed
-        elif peak_index == 5:
-            shift = 0
-
-        # If we get some other value for peak, just don't shift
-        else:
-            shift = 0
-
-        # Perform the various shifts on the data
-        # Mirror the 1 index value to create a peak and remove the last
-        if shift == 1:
-            mirrored_array = np.insert(curve_data, 0, curve_data[1])
-            moved_curve_data = mirrored_array[:-1]
-
-        # If no shift is needed
-        elif shift == 0:
-            moved_curve_data = curve_data
-            
-        # Here's the right shifts
-        elif shift < 1:
-            # Drop first value(s) and repeat last value(s)
-            moved_curve_data = np.append(curve_data[-shift:], curve_data[shift:])
-    
-        # If shift equals anything else (including 0) don't shift the data
-        else:
-            moved_curve_data = curve_data
-        
-        return moved_curve_data
-    
-    # And we'll also define a function that can apply a noise shift 
-    def noise_shift(curve_data):
-    
-        """
-        Adjusts data to compensate for background noise/fluorescence
-    
-        ARGUMENTS:
-            array (array): the array of unshifted data
-        
-        RETURNS:
-            shifted_array (array): array of shifted data
-        """
-            
-        # Find the minimum of the raw data in range 7 to 11
-        noise_shift_value = min(curve_data[7:11])
-            
-        # Shift the data by this amount
-        shifted_array = curve_data - abs(noise_shift_value)
-        return shifted_array
-        
-    # Now that we have some generic functions to adjust the data, we will
-    # iterate through each read of the raw data, make adjustments using
-    # the values in the peak profiles table, and store the cleaned data 
-    # to the data.clean dataframe. During this process, since were going
-    # through all of the work to access the data iteratively, we'll go 
-    # ahead and perform Gaussian localization on each curve. The function
-    # defined below will do that for us. 
-    
     # A list for storing all of our clean dataframes
     clean_dfs = []
     
@@ -360,7 +281,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
     
             # Run the move_peak and noise_shift function on the data
             moved_array = move_peak(one_array, peak_location)
-            cleaned_array = noise_shift(moved_array)
+            cleaned_array = simple_shift(moved_array)
 
             # Make sure the data has no negative values, shift if needed
             if any(value < 0 for value in cleaned_array):

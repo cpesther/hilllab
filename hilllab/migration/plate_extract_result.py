@@ -9,7 +9,8 @@ def plate_extract_result(bundle, column, table, value, end_only=False, end_hours
 
     ARGUMENTS:
         results (migration.Bundle):
-        table (string): one of 'eta', 'D', 'Dt', 'nrmse', or 'peak'
+        table (string): one of 'eta', 'D', eta_calib', 'D_calib', 'Dt', '
+            nrmse', or 'peak'
         value (string): the statistical value to return. One of 'mean', 
             'median', 'weighted_mean', 'minimum', 'maximum'. 
 
@@ -17,7 +18,7 @@ def plate_extract_result(bundle, column, table, value, end_only=False, end_hours
         output (float): the requested output value
     """
 
-    valid_tables = ['eta', 'D', 'Dt', 'nrmse', 'peak']
+    valid_tables = ['eta', 'D', 'eta_calib', 'D_calib', 'Dt', 'nrmse', 'peak']
     if table not in valid_tables:
         raise ValueError(f"Table '{table}' is not valid.")
 

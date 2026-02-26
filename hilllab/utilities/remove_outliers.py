@@ -11,7 +11,7 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
     being more than three scaled MADs away from the median. 
     
     ARGUMENTS:
-        array (array): Array of data containing outliers
+        array (list): Array of data containing outliers
         paste_mode (bool): controls whether the function is run in a mode
             where data can be pasted directly from Excel.
         info (bool): Whether a print message should be displayed with
@@ -21,9 +21,9 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
             cannot regonize the delimiter automatically. 
     
     RETURNS:
-        filtered_array (array): Array of values without outliers. 
-        removed_values (array): Array of the removed outlier values. 
-        removed_indices (array): Array of the indices of the outliers.
+        filtered_array (list): Array of values without outliers. 
+        removed_values (list): Array of the removed outlier values. 
+        removed_indices (list): Array of the indices of the outliers.
     """
     
     # Paste mode allows the user to paste data from Excel into an input box
@@ -44,12 +44,12 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
             split_values = np.array(input_values.split(delimiter))
             format = 'column'
         else:
-            print('ERROR: Unknown file delimiter')
-            return
+            raise ValueError('Unknown file delimeter')
+
         # Check that the values got separated properly
         try:
             array = split_values.astype(float)
-        except:
+        except ValueError:
             print('ERROR: Unable to parse pasted values')
             return
     else:

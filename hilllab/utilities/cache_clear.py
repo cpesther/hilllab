@@ -4,7 +4,7 @@ import shutil
 def cache_clear():
     
     """
-    Deletes the particlehill app data folder and all contents.
+    Deletes the hilllab app data folder and all contents.
     """
 
     # Import the path to the app data folder

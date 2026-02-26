@@ -54,6 +54,24 @@ class Bundle():
             return self.data.clean[read_start_index:read_end_index]
 
 
+    def show(self):
+
+        """
+        Displays essentially all possible information and tables about
+        this bundle for detailed inspection. 
+        """
+
+        # Show repr string
+        repr_string = self.__repr__()
+        print(repr_string)
+
+        # Print details from data class
+        self.data.show_conditions()
+        self.data.show_groups()
+        self.data.show_radii()
+        self.data.show_calibration()
+
+
     def __repr__(self):
 
         # Define the contents dicts with false values first
@@ -154,6 +172,16 @@ class Data():
         """Prints a summary table of the radii in the bundle."""
         print_dict_table(self.radii_nm, title='Radii')
 
+    
+    def show_groups(self):
+        """Prints the groups dictionary."""
+        print_dict_table(self.groups, title='Groups')
+
+
+    def show_calibration(self):
+        """Prints the calibration columns dictionary."""
+        print_dict_table(self.calibration_columns, title='Calibration Columns')
+
 
 class Results():
 
@@ -172,6 +200,6 @@ class Results():
         self.plate_peak = pd.DataFrame()
 
         # Calibrated results
-        self.calib_radii_nm = {}
+        self.radii_nm_calib = {}
         self.plate_eta_calib = pd.DataFrame()
         self.plate_D_calib = pd.DataFrame()
