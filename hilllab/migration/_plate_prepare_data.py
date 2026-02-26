@@ -20,7 +20,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
         columns_include (list): indicates which columns should be 
             included in processing.
         columns_exclude (list): list of columns that should be exluded
-            from processing. 
+            from processing.
         radius_nm (float or list): radius of the probe in nanometers or
             list of radius for each selected column.
         temperature_K (float): temperature of the system in Kelvin.

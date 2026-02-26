@@ -5,16 +5,17 @@ import numpy as np
 from ...utilities.gui.Tooltip import Tooltip
 from ...utilities.gui.Popup import Popup
 
-def plate_set_parameters():
+def _parameter_window(type='all'):
 
     """
     Opens GUI window for assigning groups, setting radius values, and 
     indiciating calibration columns. 
 
     ARGUMENTS:
-        bundle (migration.Bundle): the bundles for which the parameters
-            should be set. 
-    
+        type (string): controls which fields are shown in the selction
+            window, allowing this function to be used for inputting
+            either groups, radii, or eta calibration values, or all
+            three at once. One of 'all', 'groups', 'radii', or 'calibration'. 
     """
 
     # Some variables to store the data we'll output

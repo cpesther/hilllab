@@ -8,7 +8,7 @@ def _plate_load_wrapper(path, data_type='SPE', **kwargs):
 
     """
     This function just wraps together all of the steps requried
-    to load and pre-process a plate datafile. Now we can call this 
+    to load and pre-process a plate data file. Now we can call this 
     function and return a ready-to-go data bundle rather than having
     to call each step individually. 
 
@@ -34,7 +34,7 @@ def _plate_load_wrapper(path, data_type='SPE', **kwargs):
         print('       Would you like to load it instead?')
         decision = input('[y]/n')
         caps_decision = decision.upper()
-        if caps_decision == 'Y' or caps_decision == '':
+        if (caps_decision == 'Y') or (caps_decision == ''):
             path_to_load = bundle_full_path
             data_type = 'PRE'
         # If deciding not to load the preprepared bundle

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import time
 import pandas as pd
+import getpass
 
 def plate_export_bundle(bundle):
     
@@ -76,7 +77,7 @@ def plate_export_bundle(bundle):
         # Add some metadata regarding this preparation
         preparation_metadata = {
             'datetime_prepared': time.time(),
-            'user_prepared': os.getlogin()
+            'user_prepared': getpass.getuser()
         }
         pd.DataFrame(preparation_metadata, index=[0]).to_excel(writer, sheet_name='preparation_metadata')
         
