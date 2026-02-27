@@ -30,3 +30,5 @@ This function does not return any variables.
 - The `folder` path must contain both a folder named 'runoff' and a folder named 'bound' which each contain images with beads. The capitalization of the folder names does not matter. 
 - For best results, each bound and runoff image pair should share the exact same name (just be stored in the separate folders). This will enable automatic matching between bound and runoff images for plotting. 
 - The function can work with images in PNG, JPG, JPEG, or TIFF formats. 
+
+![Threshold Image](/images/threshold.png)
