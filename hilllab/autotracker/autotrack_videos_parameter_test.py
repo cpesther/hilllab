@@ -1,5 +1,6 @@
 # Christopher Esther, Hill Lab, 10/06/2025
 import os
+from pathlib import Path
 import cv2
 import trackpy as tp
 import numpy as np
@@ -7,7 +8,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from IPython.display import clear_output
 
+from ._validate_size import _validate_size
 from ..utilities.print_dict_table import print_dict_table
+from ..utilities.walk_dir import walk_dir
+from ..utilities.warning import warn
 
 def autotrack_videos_parameter_test(video_path, n_frames=1, bead_size_pixels=21, 
                                     max_travel_pixels=5, memory=0, invert=False, **kwargs):
@@ -38,22 +42,29 @@ def autotrack_videos_parameter_test(video_path, n_frames=1, bead_size_pixels=21,
         just makes documentation and usage a lot easier. 
     """
 
+    # Validate bead size argument
+    bead_size_pixels = _validate_size(bead_size_pixels=bead_size_pixels)
+
     # First we'll run some logic to get the exact path to the video we're testing
     if os.path.isfile(video_path):              # if it is a file
-        if not video_path.lower().endswith('.avi'):  # make sure it's an .avi file
-            print('ERROR: The path provided is not a .avi file')
-            return
+
+        # Make sure it's a video file
+        if Path(video_path).suffix.replace('.', '') not in ['avi', 'mp4']:
+            raise OSError('The path provided is not a .avi or .mp4 file')
         else:
             track_path = video_path             # we'll track it
     else:                                       # if the path is a folder
-        all_files = os.listdir(video_path)      # list it and find an avi
-        try:
-            video_name = next((f for f in all_files if f.lower().endswith('.avi')), None)
-            track_path = os.path.join(video_path, video_name)
-        except Exception:
-            print('ERROR: No .avi files found in this folder.')
-            return
-            
+        
+        # List all video files
+        all_files = walk_dir(video_path, extension=['avi', 'mp4'])
+
+        # Verify that some were found
+        if len(all_files) == 0:
+            raise OSError(f'No video files found in {video_path}')
+        
+        # Test the first file
+        track_path = all_files[0]
+        
     print(f'Testing video {track_path}')
 
     # Create the grayscale conversion function and wrap into PIMS
@@ -75,12 +86,16 @@ def autotrack_videos_parameter_test(video_path, n_frames=1, bead_size_pixels=21,
     f = tp.batch(frames, bead_size_pixels, minmass=minmass_value, invert=invert)
     print('Tracking complete')
 
+    # Verify that some beads were found
+    if len(f) == 0:
+        raise RuntimeError('No beads found in this file')
+
     # Perform linking
     try:
         particle_positions = tp.link(f, max_travel_pixels, memory=memory)
     except Exception:
-        print('Unable to link beads')
-
+        warn(msg='Unable to link beads')
+    
     # Clear the display
     try:
         clear_output(wait=True)  # clear all print outputs

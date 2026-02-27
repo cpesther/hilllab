@@ -14,5 +14,13 @@
         "resolution_width": 1280,
         "fps": 150,
         "manufacturer": "FLIR Integrated Imaging Solutions, Inc."
+    },
+    "ORCA": {
+        "name": "C11440-36U",
+        "pixel_width_um": 5.86,
+        "resolution_height": 1200,
+        "resolution_width": 1920,
+        "fps": 65,
+        "manufacturer": "Hamamatsu Photonics K.K."
     }
 }

@@ -17,12 +17,13 @@ try:
 except ModuleNotFoundError:
     in_jupyter = False
 
+from ._validate_size import _validate_size
 from ._generate_vrpn import _generate_vrpn
 from ..widgets.button_open_path import button_open_path
 from ..utilities.current_timestamp import current_timestamp
 from ..utilities.format_duration import format_duration
 from ..utilities.print_dict_table import print_dict_table
-
+from ..utilities.walk_dir import walk_dir
 
 def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21, 
                      trajectory_fraction=1.0, max_travel_pixels=5, memory=0,
@@ -38,7 +39,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     detects and links particles using TrackPy, filters the results, 
     and saves the output as a VRPN file in the .mat format.
 
-    Args:
+    ARGUMENTS:
         video_path (str): path to the folder with videos or to a single
             video.
         save_path (str): path to the folder where VRPNs should be saved
@@ -67,7 +68,7 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
             running autotracking. Mostly used when nested in other
             functions, defaults to false. 
 
-    Returns:
+    RETURNS:
         Saves one `.vrpn.mat` file per video in `save_path`. These 
         contain particle position data in a structure compatible with 
         VRPN-based systems or legacy MATLAB tracking tools.
@@ -88,13 +89,9 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
     # Check if the provided path leads directly to a video or to a folder
     if os.path.isdir(video_path):  # if it's a directory
 
-        # Walk the provided directory to determine the total number of files
-        flist = []  # array of obnoxiously long, full filenames
-        for root, _, files in os.walk(video_path):
-            for file in files:
-                if file.endswith('.avi'):
-                    flist.append(os.path.join(root, file))
-
+        # Walk the directory to find all video paths
+        flist = walk_dir(video_path, extension=['avi', 'mp4'])
+        
     else:  # if it's not a directory, then we just have one file
         flist = [video_path]
 
@@ -115,6 +112,9 @@ def autotrack_videos(video_path=None, save_path=None, bead_size_pixels=21,
         tracking_text = 'Dark spots on a white background'
     else:
         tracking_text = 'Bright spots on a black background'
+
+    # Validate bead size argument
+    bead_size_pixels = _validate_size(bead_size_pixels=bead_size_pixels)
 
     # Print out these paths and the input variables and require confirmation
     print('Please confirm the parameters below\n')
