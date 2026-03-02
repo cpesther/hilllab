@@ -10,6 +10,8 @@ from ..utilities.walk_dir import walk_dir
 from ..utilities.print_progress_bar import print_progress_bar
 from .masks.circular import circular
 from .plot.contour_hist import contour_hist
+from .plot._binding_results_handler import _binding_results_handler
+from .plot.counts_bar import counts_bar
 
 def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
 
@@ -39,6 +41,7 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
 
     # List everything within this folder
     all_files = os.listdir(folder)
+    folder_name = Path(folder).name
 
     # Create lookup dict using all caps versions for case insensitivity
     subfolder_lookup = {sf.upper(): sf for sf in all_files}
@@ -46,11 +49,9 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
     # Ensure that a runoff and bound subfolder are present
     if 'BOUND' not in subfolder_lookup.keys():
         raise OSError('Bound folder not found.')
-        return None
         
     if 'RUNOFF' not in subfolder_lookup.keys():
         raise OSError('Runoff folder not found.')
-        return None
 
     # Create the folder for plots and annotated images
     annotated_folder = Path(folder) / 'annotated'
@@ -169,8 +170,9 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
                         pad_inches=0.5, dpi=300)
             plt.close()
 
+            # Here's where we'll make all our histograms and plots
             # Contour classification histogram
-            counts_hist_save_path = plots_folder / f'contourhist_{file_name}.png'
+            counts_hist_save_path = plots_folder / 'contour_hist' / f'contour_hist_{folder_name}_{file_name}.png'
             contour_hist(counts=counts, file=file, save_path=counts_hist_save_path)
             plt.close()
             
@@ -195,4 +197,13 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
     excel_path = Path(folder) / f'{Path(folder).name}_counts.xlsx'
     results.to_excel(excel_path, index=False)
     print(f'\nCounts saved to {excel_path}')
+
+    # Now create some additional plots using these results
+    results, pivoted, _, _, _ = _binding_results_handler(results=results, save=False)
+
+    # Create simple bar chart of counts
+    counts_bar_path = plots_folder / f'counts_{folder_name}.png'
+    counts_bar(results=results, save=True, save_path=counts_bar_path)
+
+
     return results

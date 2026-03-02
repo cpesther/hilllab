@@ -6,6 +6,18 @@ from ...utilities.custom_axes import custom_axes
 
 def contour_hist(counts, file=None, save_path=None):
 
+    """
+    Plots the counts of each bead of each size (small, expected, or large)
+    in a histogram on a per-video basis. 
+
+    ARGUMENTS:
+        counts (dict): the dictionary of bead counts
+        file (string): the path to the file from which these bead counts
+            originate
+        save_path (string): when provided, this path is where a PNG copy
+            of the created figure will be saved. 
+    """
+
     # Pull all values from the counts for a histogram
     all_values = []
     for key in list(counts.keys()):
@@ -42,4 +54,5 @@ def contour_hist(counts, file=None, save_path=None):
     if save_path is not None:
         plt.savefig(save_path, bbox_inches='tight', 
                     pad_inches=0.5, dpi=300)
+        print(f'Plot saved to {save_path}')
         plt.close()

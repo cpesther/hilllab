@@ -6,6 +6,9 @@ __pycache__/
 # File browser caches
 .DS_Store
 
+# PDFs
+*.pdf
+
 # C extensions
 *.so
 
