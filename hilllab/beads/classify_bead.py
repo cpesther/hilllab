@@ -5,8 +5,8 @@ import pandas as pd
 import datetime 
 import getpass
 
-from load_hdf import load_hdf
-from plot_bead import plot_bead
+from .load_hdf import load_hdf
+from .plot_bead import plot_bead
 
 def classify_bead(path,file,start=0):
     """
@@ -47,8 +47,7 @@ def classify_bead(path,file,start=0):
             break
               
         # ask for classification
-        bead_class = input('Please classify this bead as: \n' 
-                           'Stuck (s), Transiting (t), or Oscillating (o)? \n'
+        bead_class = input('Stuck (s), Transiting (t), or Oscillating (o)? \n'
                            '(Enter d to DISCARD, or anything else to SKIP.) \n').strip().lower()
         class_dict = {
             's':'stuck',
@@ -77,8 +76,8 @@ def classify_bead(path,file,start=0):
         ok = input('Press ENTER to continue. \n' 
                    'Enter anything else to SAVE AND EXIT. \n')
         if ok:
-            print(f'You have stopped at: Bead index {i}/{(len(all_beads))-1}.\n'
-                  f'(uuid: {bead_uuid}). \n')
+            print(f'Done. You have stopped at: \n'
+                  f'Bead index {i}/{(len(all_beads))-1} (uuid: {bead_uuid}). \n')
             break
        
     # save to Excel 

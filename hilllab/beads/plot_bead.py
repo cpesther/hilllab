@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-from load_hdf import load_hdf
+from .load_hdf import load_hdf
 
 def plot_bead(bead_uuid, groupby=None, path=None, pixel_width=1):
     """
