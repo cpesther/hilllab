@@ -21,7 +21,7 @@ def plate_kinetic_calculation(path=None, bundle=None, data_type='SPE', **kwargs)
             data. Options include 'SPE' (default), 'TEC', and 'PRE'.
             
     RETURNS:
-        final_df (pd.DataFrame): table with calculation results
+        bundle (migration.Bundle): bundle object with calculation results
     """
     
     # First thing we need to do is load the data and pass down all of 
@@ -61,4 +61,3 @@ def plate_kinetic_calculation(path=None, bundle=None, data_type='SPE', **kwargs)
             getattr(bundle.results, table).loc[len(getattr(bundle.results, table))] = endpoint_results.loc[key]
 
     return bundle
-

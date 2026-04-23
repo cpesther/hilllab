@@ -6,6 +6,7 @@ from ._plate_profile_curve import _plate_profile_curve
 from .plate_export_bundle import plate_export_bundle
 from ..utilities.print_progress_bar import print_progress_bar
 from .plate_define_radii import plate_define_radii
+from ..utilities.warning import warn
 
 def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radius_nm=0, 
                        interval_minutes=15, delay_minutes=0, load_rate_minutes=1.5, 
@@ -82,7 +83,8 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
     selected_columns = bundle.data.raw.columns.take(selected_column_indices)
 
     # Now use the radii definintion function to handle creating the radii values
-    radii_nm = plate_define_radii(bundle=bundle, radius_nm=radius_nm)
+    radii_nm = plate_define_radii(bundle=bundle, radius_nm=radius_nm, columns_include=columns_include,
+                                  columns_exclude=columns_exclude, extended=bundle.data.extended)
     bundle.data.radii_nm = radii_nm  # save the radii to the bundle
 
     # <<<<< NORMALIZING THE DATA >>>>>
@@ -170,7 +172,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
             # Pull the raw data
             one_average_curve = bundle.data.average[column].to_numpy()
 
-            # Run the localization calculations 
+            # Run the localization calculations
             peak_location, gaussian_end = _plate_profile_curve(values=one_average_curve)
 
             # Save the results to the raw peaks table
@@ -200,7 +202,7 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
         
             # Pull that read's data from the main dataframe and set up some 
             # lists to store the results
-            print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Localizing data  ')
+            print_progress_bar(progress=read, total=bundle.data.num_reads-1, title='Localizing data ')
             one_read_data = bundle._load_read(read_number=read, type='normalized')
             one_column_peaks = []
             one_column_ranges = []
@@ -212,7 +214,12 @@ def _plate_prepare_data(bundle, columns_include=None, columns_exclude=None, radi
                 one_curve = one_read_data[column].to_numpy()
 
                 # Run the localization calculations 
-                peak_index, end_index = _plate_profile_curve(values=one_curve)
+                try:
+                    peak_index, end_index = _plate_profile_curve(values=one_curve)
+                except Exception:
+                    peak_index = 1
+                    end_index = 8
+                    warn(f'Unable to localize {column} read {read}. Using default values')
             
                 # Append the decision and probabiltiy to the array
                 one_column_peaks.append(peak_index)

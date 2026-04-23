@@ -55,7 +55,7 @@ def _plate_profile_curve(values, plot=False):
             
             # pars array stores the returned a, mu, and sigma values
             pars, _ = curve_fit(gaussian, x, y, p0=p0, bounds=bounds, maxfev=2000)
-        
+
             # Calculate fit error (SSE)
             y_fit = gaussian(x, *pars)
             y_errors = np.abs((y - y_fit) / y)

@@ -19,8 +19,13 @@ def walk_dir(path, extension=None):
 
     # Prepend period to all extensions
     if extension is not None:
-        extension = [f'.{e}' for e in extension]
-    
+
+        if extension is list:
+            extension = [f'.{e}' for e in extension if '.' not in e]
+        else:
+            if '.' not in extension:
+                extension = f'.{extension}'
+
     # Walk directories
     flist = []
     for root, _, files in os.walk(path):
@@ -32,9 +37,8 @@ def walk_dir(path, extension=None):
             full_suffix = ''.join(Path(file).suffixes)
             if extension is not None:
                 if (full_suffix in extension):
-                   flist.append(os.path.join(root, file))
-            else:
-                flist.append(os.path.join(root, file))
+                    flist.append(os.path.join(root, file))
+                else:
+                    flist.append(os.path.join(root, file))
                 
     return flist
-        
