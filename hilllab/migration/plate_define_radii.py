@@ -1,7 +1,9 @@
 # Christopher Esther, Hill Lab, 2/9/2026
+import numpy as np
+
 from ..utilities.print_dict_table import print_dict_table
 
-def plate_define_radii(bundle, radius_nm):
+def plate_define_radii(bundle, radius_nm, columns_include, columns_exclude, extended):
 
     """
     A backend function for the user to input radius values when 
@@ -15,8 +17,21 @@ def plate_define_radii(bundle, radius_nm):
     
     """
 
-    # Determine the number of columns in the raw data
-    num_columns = bundle.data.num_columns
+    # Determine the columns that are actually being used in this dataset
+    n_columns = len(bundle.data.raw.columns)
+
+    # If columns included was provided, just use those
+    if columns_include is not None:
+        selected_columns = columns_include
+
+    # Otherwise remove the columns flagged as excluded
+    elif columns_exclude is not None:
+        # Calculate all column numbers from length of data
+        all_columns = np.arange(1, n_columns + 1)
+        selected_columns = all_columns[~np.isin(all_columns, columns_exclude)]
+
+    else:
+        raise ValueError('Unable to determine selected columns')
     
     # Entering multi input mode 
     if radius_nm == 'multi':
@@ -30,7 +45,7 @@ def plate_define_radii(bundle, radius_nm):
               'e      = Finish and exit\n')
 
         # Iterate over each column in the dataset
-        for column in range(1, num_columns + 1):
+        for column in selected_columns:
 
             # Check if a radii value has already been assigned for this column 
             try:
@@ -41,7 +56,7 @@ def plate_define_radii(bundle, radius_nm):
             except KeyError:
                 
                 # Ask for the radius input
-                one_radius = input(f"Column {column}/{num_columns} radius (nm): ")
+                one_radius = input(f"Column {column} radius (nm): ")
 
                 # If a blank field submitted, use previous valuea
                 if one_radius == '':
@@ -70,7 +85,7 @@ def plate_define_radii(bundle, radius_nm):
         # Remove any keys greater than the number of columns (accidentally added)
         remove_keys = []
         for key in input_radii_values.keys():
-            if int(key.split('Column ')[1]) > num_columns:
+            if int(key.split('Column ')[1]) > n_columns:
                 remove_keys.append(key)
         for key in remove_keys:
             del input_radii_values[key]
@@ -102,7 +117,7 @@ def plate_define_radii(bundle, radius_nm):
         
         # Repeat this radii value for all columns
         radii_values = {}
-        for i in range(1, num_columns):
+        for i in range(1, n_columns + 1):
             radii_values[f'Column {i}'] = radius_value
 
     return radii_values

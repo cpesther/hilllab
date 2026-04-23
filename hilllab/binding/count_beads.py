@@ -97,7 +97,7 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
                 continue  # go to next if unable to read this image
 
             # Apply mask to eliminate artifacts outside well that could 
-            # distract bead counting.
+            # distract bead counting
             masked_gray = circular(gray)
 
             # Blurring helps eliminate small artifacts or variations
@@ -155,7 +155,7 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
             ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
             ax.set_title(f'{file}\n', color='gray')
 
-            # Create a legend for the annotated image        
+            # Create a legend for the annotated image
             legend_elements = [
                 plt.Rectangle((0,0),1,1, color='#FF00FF', label='Mask'),
                 plt.Rectangle((0,0),1,1, color='#FF0000', label='Small'),
@@ -204,6 +204,5 @@ def count_beads(folder, bead_type, radius_um, bead_area_range=(3, 40)):
     # Create simple bar chart of counts
     counts_bar_path = plots_folder / f'counts_{folder_name}.png'
     counts_bar(results=results, save=True, save_path=counts_bar_path)
-
 
     return results

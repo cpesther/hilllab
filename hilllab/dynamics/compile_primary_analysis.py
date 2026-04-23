@@ -31,7 +31,7 @@ def compile_primary_analysis(folder_path):
             compiled_path = test_compiled_path
         else:
             datetime_string = str(datetime.datetime.now().replace(microsecond=0)).replace(':', '_')
-            compiled_path = test_compiled_path.parent / f'{test_compiled_path.stem} {datetime_string}'
+            compiled_path = test_compiled_path.parent / f'{test_compiled_path.stem} {datetime_string}.h5'
 
     else:
         compiled_path = test_compiled_path

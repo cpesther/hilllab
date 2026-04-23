@@ -16,6 +16,8 @@ from .plate_generate_report import plate_generate_report
 from .plate_inspect import plate_inspect
 from .plate_kinetic_calculation import plate_kinetic_calculation
 from .plate_optimize_gaussian import plate_optimize_gaussian
+from. plate_relative_kinetic_calculation import plate_relative_kinetic_calculation
+from .plate_split_channels import plate_split_channels
 from .stokes_einstein import eta, D, T, r
 
 __all__ = [
@@ -29,4 +31,6 @@ __all__ = [
     'plate_kinetic_calculation',
     'plate_optimize_gaussian',
     'plate_inspect',
+    'plate_relative_kinetic_calculation',
+    'plate_split_channels',
     'eta', 'D', 'T', 'r']

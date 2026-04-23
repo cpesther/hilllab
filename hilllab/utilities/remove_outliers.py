@@ -45,10 +45,23 @@ def remove_outliers(array=[], info=True, paste_mode=True, delimiter=None):
             format = 'column'
         else:
             raise ValueError('Unknown file delimeter')
+        
+        # Clean out any empty strings
+        no_spaces = [v for v in split_values if v != '']
+
+        # And clean out any non-numerical values
+        def to_number(x):
+            try:
+                return float(x)
+            except (ValueError, TypeError):
+                return None
+
+        clean = [to_number(x) for x in no_spaces]
+        clean = [x for x in clean if x is not None]
 
         # Check that the values got separated properly
         try:
-            array = split_values.astype(float)
+            array = np.array(clean).astype(float)
         except ValueError:
             print('ERROR: Unable to parse pasted values')
             return

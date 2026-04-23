@@ -1,6 +1,5 @@
 # Christopher Esther, Hill Lab, 12/4/2025
 import pandas as pd
-from scipy.io import loadmat
 import numpy as np
 import uuid
 from sklearn.decomposition import PCA

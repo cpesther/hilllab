@@ -38,7 +38,7 @@ class Bundle():
             (pandas.DataFrame): the requested read as a dataframe. 
         """
 
-        # Calculate the indices in the main datafram for the start and end 
+        # Calculate the indices in the main dataframe for the start and end 
         # of the requested read
         read_start_index = int(read_number * 16)
         read_end_index = int(read_start_index + 16)
@@ -72,7 +72,7 @@ class Bundle():
         self.data.show_calibration()
 
 
-    def __repr__(self):
+    def contents(self):
 
         # Define the contents dicts with false values first
         keys = ['Normalization', 'Localization', 'Radii', 'Results', 'Calibration', 'Groups']
@@ -93,6 +93,14 @@ class Bundle():
             contents['Calibration'] = True
         if len(self.data.groups.keys()) > 0:
             contents['Groups'] = True
+
+        return contents
+
+
+    def __repr__(self):
+
+        # Get contents information
+        contents = self.contents()
             
         # Format this information into a string
         display = f'---- migration.Bundle ----\nFrom: {self.data.path}\n\n'
