@@ -85,10 +85,7 @@ def primary_analysis(path, fps, pixel_width):
     - alignment_deg: the angle of the primary direction of motion in degrees
     - alignment_rad: the angle of the primary direction of motion in radians
     - alignment_strength: the strength of the alignment from 0.5 to 1.0
-    
-    - path: the path to the VRPN from which this bead originated
-    - uuid: a unique identifier assigned to this bead
-    
+        
     Additionally, the function calculates and returns certain instantaneous
     values for each particle, including:
     - x: x position
@@ -122,7 +119,7 @@ def primary_analysis(path, fps, pixel_width):
     RETURNS:
         summary (pandas.DataFrame): a dataframe containing the
             summary data for each particle
-        positions (dict): a dict of dataframes for the instantaneous
+        instantaneous (dict): a dict of dataframes for the instantaneous
             data for each particle by particle ID
         metadata (dict): a few "metadata" like parameters for the entire
             video. 
@@ -133,7 +130,7 @@ def primary_analysis(path, fps, pixel_width):
 
     # Skip emtpy VRPNs
     if data.shape[0] == 0:
-        return None
+        return None, None, None
 
     # Clean the data
     n_frames = int(max(data['frame']) + 1)
@@ -364,6 +361,6 @@ def primary_analysis(path, fps, pixel_width):
 
     # Combine all the dfs into one
     summary = pd.concat(all_particle_data_dfs).reset_index()
-    positions = pd.concat(all_instant_data_dfs).reset_index()
+    instantaneous = pd.concat(all_instant_data_dfs).reset_index()
     
-    return summary, positions, metadata
+    return summary, instantaneous, metadata

@@ -11,7 +11,7 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
 
     """
     Runs the primary_analysis function on a batch of folders containing
-    videos and exports the results to Excel files for each subfolder.
+    VRPNs and exports the results to Excel files for each subfolder.
     For more details, see the primary_analysis function docstring.
 
     ARGUMENTS:
@@ -23,8 +23,8 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
 
     RETURNS:
         Outputs a .xlsx file within each subfolder containing the
-            compiled data from each VRPN. Certain data is also saved
-            to pickle files for faster loading. 
+        compiled data from each VRPN. Certain data is also saved
+        to pickle files for faster loading. 
     """
 
     # Get all the subfolders and their files
@@ -41,11 +41,12 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
 
     # Create list to store the outputs from all files if compiling
     summary_all_dfs = []
-    positions_all_dfs = []
+    instantaneous_all_dfs = []
     metadata_all_dicts = []
 
     # Iterate over each subfolder
     processing_count = 0
+    skipped_folder_count = 0
     for sub_index, subfolder in enumerate(folders.keys()):
         vrpn_files = folders[subfolder]  # get the paths within this subfolder
 
@@ -56,13 +57,13 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
 
         # Check if the processing files already exist, and skip if requested
         if (os.path.exists(subfolder_h5_file_path)) and skip_existing:
-            print(f'Results already exist. Skipping folder {subfolder}')
+            skipped_folder_count += 1
             processing_count += len(vrpn_files)
             continue
         
         # Create some variables to store the results just within this subfolder
         summary_subfolder_dfs = []
-        positions_subfolder_dfs = []
+        instantaneous_subfolder_dfs = []
         metadata_subfolder_dicts = []
         
         # Run primary analysis on each VRPN file
@@ -71,24 +72,25 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
             # Print a progress bar
             processing_count += 1
             print_progress_bar(progress=processing_count, total=file_count, title=f'Primary analysis ({processing_count} of {file_count})')
-            
-            # Run analysis
-            one_summary_data, one_positions_data, one_metadata = primary_analysis(path=sub_file, fps=fps, pixel_width=pixel_width)
 
-            # Save the results
-            summary_subfolder_dfs.append(one_summary_data)
-            positions_subfolder_dfs.append(one_positions_data)
-            metadata_subfolder_dicts.append(one_metadata)
+            # Run analysis
+            one_summary_data, one_instantaneous_data, one_metadata = primary_analysis(path=sub_file, fps=fps, pixel_width=pixel_width)
+
+            # Save the results (if any)
+            if one_summary_data is not None:
+                summary_subfolder_dfs.append(one_summary_data)
+                instantaneous_subfolder_dfs.append(one_instantaneous_data)
+                metadata_subfolder_dicts.append(one_metadata)
 
         # Compile the resuts into their dfs for this subfolder
         summary_subfolder = pd.concat(summary_subfolder_dfs)
-        positions_subfolder = pd.concat(positions_subfolder_dfs)
+        instantaneous_subfolder = pd.concat(instantaneous_subfolder_dfs)
         metadata_sub = pd.DataFrame(metadata_subfolder_dicts)
         
         # Only save the subfolder results if compiling all the data afterwards
         if compile:
             summary_all_dfs.append(summary_subfolder)
-            positions_all_dfs.append(positions_subfolder)
+            instantaneous_all_dfs.append(instantaneous_subfolder)
             metadata_all_dicts.extend(metadata_subfolder_dicts)
 
         # Save the results to Excel files for this subfolder
@@ -102,8 +104,8 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
                             data_columns=['uuid', 'path', 'particle_id'])
 
         # Replace None with NaN for instantaneous data
-        positions_subfolder = positions_subfolder.map(lambda x: np.nan if x is None else x)
-        positions_subfolder.to_hdf(subfolder_h5_file_path, key='positions', mode='a', format='table',
+        instantaneous_subfolder = instantaneous_subfolder.map(lambda x: np.nan if x is None else x)
+        instantaneous_subfolder.to_hdf(subfolder_h5_file_path, key='instantaneous', mode='a', format='table',
                                     data_columns=['uuid', 'path', 'particle_id'])
 
         metadata_sub.to_hdf(subfolder_h5_file_path, key='metadata', mode='a', format='table',
@@ -114,7 +116,7 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
 
         print('\nSaving data. This may take a minute...')
         compiled_summary = pd.concat(summary_all_dfs)  # compile the data
-        compiled_positions = pd.concat(positions_all_dfs)
+        compiled_instantaneous = pd.concat(instantaneous_all_dfs)
         compiled_metadata = pd.DataFrame(metadata_all_dicts)
 
         # Generate the save name and paths
@@ -132,8 +134,8 @@ def batch_primary_analysis(folder_path, fps, pixel_width, compile=True, skip_exi
                             data_columns=['uuid', 'path', 'particle_id'])
 
         # Replace None with NaN for instantaneous data
-        compiled_positions = compiled_positions.map(lambda x: np.nan if x is None else x)
-        compiled_positions.to_hdf(compiled_h5_path, key='positions', mode='a', format='table',
+        compiled_instantaneous = compiled_instantaneous.map(lambda x: np.nan if x is None else x)
+        compiled_instantaneous.to_hdf(compiled_h5_path, key='instantaneous', mode='a', format='table',
                                     data_columns=['uuid', 'path', 'particle_id'])
 
         compiled_metadata.to_hdf(compiled_h5_path, key='metadata', mode='a', format='table',

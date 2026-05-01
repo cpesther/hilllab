@@ -55,8 +55,9 @@ def batch_calculate_AFV(path):
     all_afv = pd.concat(clean_dfs, ignore_index=True)
 
     # Write these values to a H5 file in the same folder
-    output_path = Path(path).parent / f'{Path(path).stem}_AFV.h5'
+    output_path = Path(path).parent / f'{Path(path).stem}_.afv.h5'
     all_afv = all_afv.map(lambda x: np.nan if x is None else x)
     all_afv.to_hdf(output_path, key='afv', mode='w', format='table',
                                 data_columns=['uuid'])
     
+    return output_path

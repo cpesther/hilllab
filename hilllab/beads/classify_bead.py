@@ -1,5 +1,4 @@
-# ellen han, 1/14/2026
-
+# Ellen Han, 1/14/2026
 from pathlib import Path
 import pandas as pd
 import datetime 
@@ -8,7 +7,8 @@ import getpass
 from .load_hdf import load_hdf
 from .plot_bead import plot_bead
 
-def classify_bead(path,file,start=0):
+def classify_bead(path, file, start=0):
+    
     """
     Plots individual bead trajectory from a HDF file and asks for user-input
     classification of motion (stuck, transiting, oscillating). Writes or updates
@@ -21,12 +21,12 @@ def classify_bead(path,file,start=0):
         start (int): index of bead to start from (default to 0)
     """
 
-    # get user
+    # Get user
     username = getpass.getuser()
 
-    # load data
+    # Load data
     groupby = load_hdf(path)
-    groupby_summary,*_ = groupby
+    groupby_summary, *_ = groupby
     
     # to iterate over
     all_beads = list(groupby_summary.groups.keys()) 

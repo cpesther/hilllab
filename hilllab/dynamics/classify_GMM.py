@@ -3,7 +3,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.mixture import GaussianMixture
 import pandas as pd
 
-def classify_GMM(summary, identifier=None):
+def classify_GMM(h5_path, identifier=None):
 
     """
     Classifies beads into three clusters (stuck, oscillating, and
@@ -14,6 +14,9 @@ def classify_GMM(summary, identifier=None):
         summary_data (pandas.DataFrame): the summary data as calcualted
             by the primary_analysis function.
     """
+
+    # Load the summary data
+    summary = pd.read_hdf(h5_path, key='summary')
 
     # Select the features
     n_clusters = 3

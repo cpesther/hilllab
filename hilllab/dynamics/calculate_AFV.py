@@ -12,7 +12,7 @@ def calculate_AFV(position_data, fps):
     ARGUMENTS:
         position_data (pandas.DataFrame): a dataframe containing (at minimum)
             values for the PCA and speed of the particle at each frame as
-            saved in the 'positions' table produced by the primary analysis 
+            saved in the 'instantaneous' table produced by the primary analysis 
             function.
         fps (int): the sampling rate of the data in frames per second.
 
