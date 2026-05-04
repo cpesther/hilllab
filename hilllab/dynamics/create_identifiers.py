@@ -1,9 +1,9 @@
 # Christopher Esther, Hill Lab, 1/16/2026
-from pathlib import Path
-import re
 import numpy as np
 
-def create_identifiers(summary, identifier_name, identifier_split):
+from ._identifier_from_path import _identifier_from_path
+
+def create_identifiers(summary, split1, split2, name_only=False, numeric_only=False):
 
     """
     Uses the path values saved from the primary analysis function to
@@ -17,23 +17,18 @@ def create_identifiers(summary, identifier_name, identifier_split):
     with the identifier_split = 'Plate' returns a value of 16.
 
     ARGUMENTS:
-        identifier_name (string): this is the name of the column in the 
-            summary data table in which the identifier values will be 
-            saved
-        identifier_split (string): this is the string within the file
-            name which is immediately followed by the numerical values
-            desired for use as the identifier.
+        summary (pandas.DataFrame): the summary table from an h5 dynamics file
+        split1 (string): the string where the path should be split first
+        split2 (string): the string where the last fragment of the previous
+            path split should be split again.
+        name_only (bool): if true, the identifier extraction will be
+            performed only on the file name, not the entire path
+        numeric_only (bool): if true, only numerical characters in the 
+            identifier will be included
     """
-
-    # Here's our helper function that can actually be applied to the df
-    def _identifier_from_path(path, identifier_split=identifier_split):
-    
-        # Split the string on the path
-        post_split_string = Path(path).name.split(identifier_split)[-1]
-        return re.match(r'^[-+]?\d*\.?\d+', post_split_string).group(0)  # return following numericals
     
     # Extract and save the plate numbers from the path
-    identifiers = summary['path'].apply(_identifier_from_path, args=(identifier_split,))
+    identifiers = summary['path'].apply(_identifier_from_path, args=(split1, split2, name_only, numeric_only,))
     unique_identifiers = np.unique(identifiers)
     
     # Confirm the identifiers before proceeding
@@ -43,7 +38,7 @@ def create_identifiers(summary, identifier_name, identifier_split):
     
     # Proceed with input and return whether extraction was successful
     if (confirmation.upper() == 'Y') or (confirmation.upper() == ''):
-        summary[identifier_name] = identifiers
+        summary['identifier'] = identifiers
         print('Identifiers applied!')
         return True, summary
     else:

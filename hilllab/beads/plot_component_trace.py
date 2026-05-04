@@ -54,7 +54,7 @@ def plot_component_trace(path, save=False, bead=0):
 
     # Add in the stuff to make the graph pretty
     ax.set_title(f'{path[-130:]}\nComponent Trace: Bead index {bead} of {int(max(data[2]))}', fontsize=10)
-    ax.set_xlabel('Frame Number');
+    ax.set_xlabel('Frame Number')
 
     # Save plot if requested
     if save:

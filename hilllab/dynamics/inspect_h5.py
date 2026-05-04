@@ -1,4 +1,4 @@
-# Christopher Esther, 5/1/2026
+# Christopher Esther, Hill Lab, 5/1/2026
 import pandas as pd
 from pathlib import Path
 import numpy as np
