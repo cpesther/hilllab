@@ -19,7 +19,10 @@ dependencies = [
     "scipy==1.16.2",
     "trackpy==0.7",
     "opencv-python==4.7.0.72",
-    "setuptools==69.5.1"
+    "setuptools==69.5.1",
+    "ipywidgets==8.1.2",
+    "openpyxl==3.1.5",
+    "h5py==3.11.0"
 ]
 
 classifiers = [

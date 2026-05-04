@@ -44,11 +44,11 @@ def classify_GMM(h5_path, identifier=None):
     cluster_label_strings = [cluster_strings[label] for label in cluster_labels]
 
     # Save cluster labels to data
-    summary['cluster'] = cluster_label_strings
+    summary['classification'] = cluster_label_strings
 
     # Save cluster weights as well
     for cluster_number in list(cluster_strings.keys()):
-        summary[f'{cluster_strings[cluster_number]}_cluster_weight'] = cluster_probs[:, cluster_number]
+        summary[f'{cluster_strings[cluster_number]}_classification_weight'] = cluster_probs[:, cluster_number]
 
     # If provided with an identifier column, we can create a pivot table with this value
     if identifier is not None:

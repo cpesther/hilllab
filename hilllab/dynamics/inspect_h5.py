@@ -22,7 +22,6 @@ def inspect_h5(h5_path, show_parents=True):
 
     # Compile information about this H5 file
     file_info = {}
-
     file_info['Name'] = Path(h5_path).stem
     file_info['# Beads'] = summary.shape[0]
     file_info['# VRPNs Compiled'] = len(np.unique(summary['path']))
@@ -30,6 +29,10 @@ def inspect_h5(h5_path, show_parents=True):
     # Get list of parent folders
     parents = np.unique([Path(p).parent for p in np.unique(summary['path'])])
     file_info['# Parent Folders'] = len(parents)
+
+    # Get information on which pipeline steps this file has been through
+    file_info['Identifiers'] = 'identifier' in summary.columns
+    file_info['Classifications'] = 'classification' in summary.columns
 
     # Print the details table
     print_dict_table(file_info, title='H5 File Inspection')

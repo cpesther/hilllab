@@ -32,6 +32,6 @@ def _identifier_from_path(path, split1, split2, name_only=False, numeric_only=Fa
 
     # Extract only numerical characters, if requested
     if numeric_only:
-        identifier = ''.join(c for c in identifier if c.isdigit())
+        identifier = int(''.join(c for c in identifier if c.isdigit()))
 
     return identifier
