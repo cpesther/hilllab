@@ -40,4 +40,4 @@ where = ["."]
 include = ["hilllab*"]
 
 [tool.setuptools.package-data]
-"hilllab" = ["*.dll", "*.exe"]
+"hilllab" = ["*.dll", "*.exe", "*.json"]
