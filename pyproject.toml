@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hilllab"
-version = "1.2.260507.1"
+version = "1.2.260511.1"
 description = "Code used in the David Hill Lab in the Marsico Lung Institute at UNC-CH"
 authors = [{name = "Christopher Esther", email = "Christopher_Esther@med.unc.edu"}]
 readme = "README.md"
@@ -40,4 +40,4 @@ where = ["."]
 include = ["hilllab*"]
 
 [tool.setuptools.package-data]
-"hilllab" = ["*.dll", "*.exe", "*.json"]
+"hilllab" = ["*.dll", "*.exe", "*.json", "*.sql"]

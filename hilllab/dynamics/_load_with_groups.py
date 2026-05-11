@@ -6,7 +6,7 @@ import json
 
 from ..utilities.print_dict_table import print_dict_table
 
-def _load_with_groups(h5_path, groups_path=None, expectations=None):
+def _load_with_groups(h5_path, groups_path=None, expectations=[]):
 
     """
     Loads the summary table from an h5 file and incorporates the groups
@@ -30,9 +30,9 @@ def _load_with_groups(h5_path, groups_path=None, expectations=None):
     summary = pd.read_hdf(h5_path, key='summary')
 
     # Check our expectations first
-    if 'identifier' in expectations:
-        if 'identifier' not in summary.columns:
-            pass
+    for value in expectations:
+        if value not in summary.columns:
+            raise ValueError(f"Missing expected column '{value}")
 
     # If a groups path was not provided, go through the default selection logic
     if groups_path is None:
