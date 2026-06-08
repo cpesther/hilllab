@@ -27,6 +27,7 @@ def _load_with_groups(h5_path, groups_path=None, expectations=[]):
     """
 
     # Load the summary data
+    print('Loading data...')
     summary = pd.read_hdf(h5_path, key='summary')
 
     # Check our expectations first

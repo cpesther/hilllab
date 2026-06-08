@@ -6,44 +6,58 @@ A group of miscellaneous functions that help with various
 non-computational tasks.
 """
 
-# Generic Python imports
+
+from .batch_rename_files import batch_rename_files
+from .cache_clear import cache_clear
+from .cache_view import cache_view
+from .current_timestamp import current_timestamp
+from .custom_axes import custom_axes
+from .format_duration import format_duration
+from .format_spectra_table import format_spectra_table
+from .generate_neighbor_path import generate_neighbor_path
+from .generate_safe_name import generate_safe_name
+from .images_to_video import images_to_video
+from .load_matlab import load_matlab
+from .load_vrpn import load_vrpn
+from .print_dict_table import print_dict_table
+from .print_progress_bar import print_progress_bar
+from .record_memory_snapshot import record_memory_snapshot
+from .record_message import record_message
+from .remove_outliers import remove_outliers
+from .verify_name import verify_name
+from .walk_dir import walk_dir
+from .warning import warn, enable_simple_warnings
+from .yeild_dir import yield_dir
+
+__all__ = [
+    'batch_rename_files', 
+    'cache_clear', 
+    'cache_view',
+    'current_timestamp',
+    'custom_axes',
+    'format_duration', 
+    'format_spectra_table',
+    'generate_neighbor_path', 
+    'generate_safe_name', 
+    'images_to_video', 
+    'load_matlab', 
+    'load_vrpn', 
+    'print_dict_table', 
+    'print_progress_bar',
+    'record_memory_snapshot', 
+    'record_message', 
+    'remove_outliers', 
+    'verify_name', 
+    'walk_dir', 
+    'warn', 
+    'enable_simple_warnings', 
+    'yield_dir'
+]
+
+# Generic Python imports to handle the stuff below
 import platform
 import os
 from datetime import datetime
-
-# Import all the functions included in this subpackage
-# Display stuff
-from .format_duration import format_duration
-from .print_progress_bar import print_progress_bar
-from .print_dict_table import print_dict_table
-from .current_timestamp import current_timestamp
-
-# Messages and recording
-from .record_message import record_message
-from .record_memory_snapshot import record_memory_snapshot
-
-# Caching and appdata
-from .cache_clear import cache_clear
-from .cache_view import cache_view
-
-# File interactions
-from .load_matlab import load_matlab
-from .load_vrpn import load_vrpn
-from .walk_dir import walk_dir
-
-__all__ = [
-    "format_duration",
-    "print_progress_bar",
-    "print_dict_table",
-    "current_timestamp",
-    "record_message",
-    "record_memory_snapshot",
-    "cache_clear",
-    "cache_view",
-    "load_matlab",
-    "load_vrpn",
-    "walk_dir"
-]
 
 # We also need to do some initialization of the location where certain
 # analytics and logging data is stored. We'll do that here. 
