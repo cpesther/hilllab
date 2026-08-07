@@ -29,7 +29,6 @@ def process_2C_swelling(path, groups=[], time_units='hours', read_sample_interva
     """
 
     # Load the data
-    # Load the data
     green_data, red_data, num_reads = _load_file(path=path)
 
     print('Loading green channel...')
@@ -52,7 +51,7 @@ def process_2C_swelling(path, groups=[], time_units='hours', read_sample_interva
     nred_integrals = _delta_normalize_columns(red_integrals)
 
     # And the index numbers for each read we want to sample
-    read_index_numbers = np.arange(0, num_reads, read_sample_interval)
+    read_index_numbers = np.arange(0, num_reads - 1, read_sample_interval)
 
     results = {
         'green': {'mean': {}, 'std': {}},

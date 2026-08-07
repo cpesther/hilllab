@@ -218,7 +218,7 @@ PARAMETERS = {
     },
     'bb_area': {
         'display_name': 'Bounding Box Area',
-        'units': 'pixels²'
+        'units': 'µm²'
     },
     'alignment_deg': {
         'display_name': 'Alignment',
@@ -263,5 +263,37 @@ PARAMETERS = {
     'group': {
         'display_name': 'Group',
         'units': None
+    },
+    'amplitude_abs': {
+        'display_name': 'Amplitude (absolute)',
+        'units': 'µm'
+    },
+    'amplitude_mean': {
+        'display_name': 'Amplitude (mean)',
+        'units': 'µm'
+    },
+    'amplitude_quar': {
+        'display_name': 'Amplitude (quartile)',
+        'units': 'µm'
+    },
+    'frequency': {
+        'display_name': 'Frequency',
+        'units': 'Hz'
+    },
+    'velocity_up_mean': {
+        'display_name': 'Velocity Up (mean)',
+        'units': 'µm/s'
+    },
+    'velocity_down_mean': {
+        'display_name': 'Velocity Up (mean)',
+        'units': 'µm/s'
+    },
+    'velocity_up_med': {
+        'display_name': 'Velocity Up (median)',
+        'units': 'µm/s'
+    },
+    'velocity_down_med': {
+        'display_name': 'Velocity Up (median)',
+        'units': 'µm/s'
     }
 }

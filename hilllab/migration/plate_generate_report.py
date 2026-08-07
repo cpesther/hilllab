@@ -217,7 +217,7 @@ def plate_generate_report(bundle, include_calibrated=True):
     ws.merge_cells(f'{eta_start_col}1:{eta_end_col}1')
     ws.merge_cells(f'{D_start_col}1:{D_end_col}1')
     ws['A1'] = 'Eta (mPa•s) (clean)'
-    ws[f'{D_start_col}1'] = 'Diffusion Coefficient (m²s) (clean)'
+    ws[f'{D_start_col}1'] = 'Diffusion Coefficient (m²/s) (clean)'
     ws['A1'].font = Font(color='4B54CC', bold=True, size=14)
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'{D_start_col}1'].font = Font(color='4B54CC', bold=True, size=14)
@@ -228,7 +228,7 @@ def plate_generate_report(bundle, include_calibrated=True):
     ws.merge_cells(f'{eta_start_col}{raw_data_title_row}:{eta_end_col}{raw_data_title_row}')
     ws.merge_cells(f'{D_start_col}{raw_data_title_row}:{D_end_col}{raw_data_title_row}')
     ws[f'{eta_start_col}{raw_data_title_row}'] = 'Eta (mPa•s) (raw)'
-    ws[f'{D_start_col}{raw_data_title_row}'] = 'Diffusion Coefficient (m²s) (raw)'
+    ws[f'{D_start_col}{raw_data_title_row}'] = 'Diffusion Coefficient (m²/s) (raw)'
     ws[f'{eta_start_col}{raw_data_title_row}'].font = Font(color='FF0000', bold=True, size=14)
     ws[f'{eta_start_col}{raw_data_title_row}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'{D_start_col}{raw_data_title_row}'].font = Font(color='FF0000', bold=True, size=14)
@@ -240,7 +240,7 @@ def plate_generate_report(bundle, include_calibrated=True):
         ws.merge_cells(f'{eta_start_col}{calib_data_title_row}:{eta_end_col}{calib_data_title_row}')
         ws.merge_cells(f'{D_start_col}{calib_data_title_row}:{D_end_col}{calib_data_title_row}')
         ws[f'{eta_start_col}{calib_data_title_row}'] = 'Eta (mPa•s) (calibrated)'
-        ws[f'{D_start_col}{calib_data_title_row}'] = 'Diffusion Coefficient (m²s) (calibrated)'
+        ws[f'{D_start_col}{calib_data_title_row}'] = 'Diffusion Coefficient (m²/s) (calibrated)'
         ws[f'{eta_start_col}{calib_data_title_row}'].font = Font(color='36942B', bold=True, size=14)
         ws[f'{eta_start_col}{calib_data_title_row}'].alignment = Alignment(horizontal='center', vertical='center')
         ws[f'{D_start_col}{calib_data_title_row}'].font = Font(color='36942B', bold=True, size=14)

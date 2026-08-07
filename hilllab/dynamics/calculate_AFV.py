@@ -2,15 +2,15 @@
 import numpy as np
 from scipy.signal import find_peaks
 
-def calculate_AFV(position_data, fps):
+def calculate_AFV(instantaneous_data, fps):
 
     """
-    When provided the position_data dataframe for one bead (which is output
+    When provided the instantaneous data dataframe for one bead (which is output
     from the primary_analysis function), this function will calculate
     the amplitude, velocity, and frequency of this beads oscillation/movement.
 
     ARGUMENTS:
-        position_data (pandas.DataFrame): a dataframe containing (at minimum)
+        instantaneous_data (pandas.DataFrame): a dataframe containing (at minimum)
             values for the PCA and speed of the particle at each frame as
             saved in the 'instantaneous' table produced by the primary analysis 
             function.
@@ -24,7 +24,7 @@ def calculate_AFV(position_data, fps):
     afv = {}  # create dict to save results
 
     # Pull the PCA from the position data
-    pca = position_data['pca'].reset_index()['pca']
+    pca = instantaneous_data['pca'].reset_index()['pca']
 
     # <<<<< CALCULATE AMPLITUDE >>>>>
     # Find peaks in PCA signal
@@ -94,7 +94,7 @@ def calculate_AFV(position_data, fps):
     trends = np.sign(diff)
     
     # Calculate speeds of up- and downstrokes separately
-    speeds = position_data['speed'].to_numpy()
+    speeds = instantaneous_data['speed'].to_numpy()
     up_speeds = []
     down_speeds = []
     for i, trend in enumerate(trends):

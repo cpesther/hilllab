@@ -36,10 +36,10 @@ def calculate_NIF(channel_data, num_reads):
         one_read_integrals = []  # an array to store this read's integrals
         
         # Iterate overy each column in this read
-        for i in range(1, 25):
+        for column in read_data.columns:
     
             # Pull the column's data and calculate the integral
-            column_data = np.array(read_data[f'Column {i}'])
+            column_data = np.array(read_data[column])
             one_integral = integrate.simpson(y=column_data, x=x_distances)
             one_read_integrals.append(one_integral)
     

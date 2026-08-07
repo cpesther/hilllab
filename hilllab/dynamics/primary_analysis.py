@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import uuid
 from sklearn.decomposition import PCA
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, find_peaks
+import hashlib
 
 from ..utilities.load_vrpn import load_vrpn
 
@@ -85,6 +86,15 @@ def primary_analysis(path, fps, pixel_width):
     - alignment_deg: the angle of the primary direction of motion in degrees
     - alignment_rad: the angle of the primary direction of motion in radians
     - alignment_strength: the strength of the alignment from 0.5 to 1.0
+
+    - amplitude_abs: amplitude of PCA calculated via absolute minimum and maximum
+    - amplitude_mean: amplitude of PCA calculated via mean positive and negative values
+    - amplitude_quar: amplitude of PCA calculated via 75th and 25th percentile values
+    - frequency: the frequency with which the particle oscillates along its PCA
+    - velocity_up_mean: mean positive velocity on the PCA
+    - velocity_down_mean: mean negative velocity on the PCA
+    - velocity_up_med: median positive velocity on the PCA
+    - velocity_down_med: meidan negative velocity on the PCA
         
     Additionally, the function calculates and returns certain instantaneous
     values for each particle, including:
@@ -146,8 +156,8 @@ def primary_analysis(path, fps, pixel_width):
     metadata['n_particles'] = len(all_particles)
 
     # Iterate over each bead and perform calculations
-    all_particle_data_dfs = []
-    all_instant_data_dfs = []
+    all_particle_data_dicts = []
+    all_instant_data_dicts = []
     for particle_id in all_particles:
 
         # Generate a UUID to help identify this particle
@@ -309,10 +319,6 @@ def primary_analysis(path, fps, pixel_width):
         particle_data['alignment_rad'] = alignment_rad 
         particle_data['alignment_strength'] = alignment_strength 
 
-        # Also save the path to the particle row for later analysis
-        particle_data['path'] = path
-        particle_data['uuid'] = uid
-
         # Determine window length as 10% of signal length
         window_length = max(int(len(projected) * 0.1), 5)  # ensure at least 5 samples
 
@@ -327,17 +333,126 @@ def primary_analysis(path, fps, pixel_width):
             if window_length % 2 == 0:     # and still odd
                 window_length += 1
 
-        # Apply Savitzky-Golay filter
+        # Apply Savitzky-Golay filter to the PCA
         trend = savgol_filter(projected, window_length=window_length, polyorder=polyorder, mode='interp')
-        projected_detrend = projected - trend
+        clean_pca = projected - trend
 
-        # Append the particle data to the list
-        all_particle_data_dfs.append(pd.DataFrame([particle_data]))
+        # Calculate the AFV (amplitude, frequency, and velocity) values from the PCA
+        # Find peaks in PCA signal
+        hipeaks_index, _ = find_peaks(clean_pca, prominence=1)
+        lopeaks_index, _ = find_peaks(-clean_pca, prominence=1)
+
+        # Can't calculate amplitude if no peaks found in either direction
+        if (len(hipeaks_index) == 0) or (len(lopeaks_index) == 0):
+            particle_data['amplitude_abs'] = None
+            particle_data['amplitude_mean'] = None
+            particle_data['amplitude_quar'] = None
+        else:
+            # Pull the values from these peak indices
+            hipeaks = clean_pca[hipeaks_index]
+            lopeaks = clean_pca[lopeaks_index]
+            hipeaks_mean = np.mean(hipeaks)
+            lopeaks_mean = np.mean(lopeaks)
+
+            # High quartile
+            if hipeaks.size == 0:
+                hi_quartile_mean = np.nan
+            else:
+                p75 = np.percentile(hipeaks, 75)
+                hi_quartile_mean = np.mean(hipeaks[hipeaks >= p75])
+            
+            # Low quartile
+            if lopeaks.size == 0:
+                lo_quartile_mean = np.nan
+            else:
+                p25 = np.percentile(lopeaks, 25)
+                lo_quartile_mean = np.mean(lopeaks[lopeaks <= p25])
+            
+            # Save values to dict
+            particle_data['amplitude_abs'] = max(hipeaks) - min(lopeaks)
+            particle_data['amplitude_mean'] = hipeaks_mean - lopeaks_mean
+            particle_data['amplitude_quar'] = hi_quartile_mean - lo_quartile_mean
+
+        # Calculate the frequency
+        # Pad the PCA signal to a length equal to a power of two for a faster FFT
+        n = len(clean_pca)
+        target_length = 1 << (n - 1).bit_length()  # next power of two
+        pca_padded = np.pad(clean_pca, (0, target_length - n), mode='constant')
+        
+        # Run FFT on the data
+        freqs = np.fft.rfftfreq(n, d=1 / fps)  # frequency axis
+        fft_vals = np.fft.rfft(pca_padded)
+        power = np.abs(fft_vals)**2            # power spectrum
+        
+        # Find the peaks in the PSD
+        trim_length = int((len(clean_pca) / 2) + 1)
+        freqs_trimmed = freqs[:trim_length]
+        power_trimmed = power[:trim_length]
+        f_peaks, f_properties = find_peaks(power_trimmed, prominence=300)
+        
+        # Safe execution in the event that no peaks were found
+        if len(f_peaks) == 0:
+            frequency = None
+        else:
+            dominant_peak = f_peaks[np.argmax(f_properties['prominences'])]
+            frequency = freqs_trimmed[dominant_peak]
+        
+        # Save value to dict
+        particle_data['frequency'] = frequency
+
+        # Calculate velocity
+        # Calculate differences between subsequent values and direction
+        diff = np.diff(clean_pca)
+        trends = np.sign(diff)
+        
+        # Calculate speeds of up- and downstrokes separately
+        up_speeds = []
+        down_speeds = []
+        for i, trend in enumerate(trends):
+        
+            # Pull the speed value and make sure it isn't a nan
+            speed_value = speed[i]
+            if np.isnan(speed_value):
+                continue
+            
+            # Save speed to appropriate list depending on direction
+            if trend > 0:
+                up_speeds.append(speed_value)
+            else:
+                down_speeds.append(speed_value)
+        
+        # Save values to dict
+        particle_data['velocity_up_mean'] = np.mean(up_speeds)
+        particle_data['velocity_down_mean'] = np.mean(down_speeds)
+        particle_data['velocity_up_med'] = np.median(up_speeds)
+        particle_data['velocity_down_med'] = np.median(down_speeds)
+
+        # Generate a hash for this particle based on its parameters. 
+        # This allows for cross-database linking of particle if data
+        # is reprocessed (and therefore assigned new UUIDs), which is 
+        # mostly useful for backwards compatability or recovery
+        fingerprint = (
+            round(mean_x, 2),
+            round(mean_y, 2),
+            round(particle_data['std_x'], 2),
+            round(particle_data['std_y'], 2),
+            round(path_length, 2),
+            round(displacement, 2)
+        )
+        hash = hashlib.sha256(str(fingerprint).encode()).hexdigest()
+
+        # Also save the path to the particle row for later analysis
+        particle_data['hash'] = hash
+        particle_data['path'] = path
+        particle_data['uuid'] = uid
+
+        # Append the summary particle data to the list
+        all_particle_data_dicts.append(particle_data)
 
         # At this point we'll also compile all the instantaneous data calculated
         # for this partcile into a dataframe and then save it to a dict based
         # on that particles ID number.
-        instant_data = pd.DataFrame({
+        instant_data = {
             'x': x,
             'y': y,
             'heading_deg': np.append(None, headings_deg),  # append None at end b/c array is n-1 to coords
@@ -352,15 +467,18 @@ def primary_analysis(path, fps, pixel_width):
             'acceleration': np.append([None, None], acceleration),
             'distance': np.append(0, length_segments),
             'total_distance': np.append(0, np.cumsum(length_segments)),
-            'pca': projected_detrend,
+            'pca': clean_pca,
             'path': np.repeat(path, len(x)),
             'particle_id': np.repeat(particle_id, len(x)),
             'uuid': np.repeat(uid, len(x))
-        })
-        all_instant_data_dfs.append(instant_data)
+        }
+        all_instant_data_dicts.append(instant_data)
 
     # Combine all the dfs into one
-    summary = pd.concat(all_particle_data_dfs).reset_index()
-    instantaneous = pd.concat(all_instant_data_dfs).reset_index()
+    summary = pd.DataFrame(all_particle_data_dicts)
+    instantaneous = pd.concat(
+        [pd.DataFrame(d) for d in all_instant_data_dicts],
+        ignore_index=True
+    )
     
     return summary, instantaneous, metadata

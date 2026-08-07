@@ -32,14 +32,11 @@ def batch_calculate_AFV(path):
         print_progress_bar(progress=i+1, total=total, title='Calculating AFV')
         
         # Load the particle data
-        position_data = pd.read_hdf(path, key='positions', where=f"uuid == '{particle_uuid}'")
-
-        if i > 100:
-            break
+        instantaneous_data = pd.read_hdf(path, key='instantaneous', where=f"uuid == '{particle_uuid}'")
             
         # Calculate AFV
-        fps = metadata.loc[metadata['path'] == np.unique(position_data['path'])[0], 'fps'].iloc[0]
-        afv_values = calculate_AFV(position_data=position_data, fps=fps)
+        fps = metadata.loc[metadata['path'] == np.unique(instantaneous_data['path'])[0], 'fps'].iloc[0]
+        afv_values = calculate_AFV(instantaneous_data=instantaneous_data, fps=fps)
         
         # Save the AFV values as dataframe to the list
         afv_values['uuid'] = particle_uuid
@@ -55,7 +52,7 @@ def batch_calculate_AFV(path):
     all_afv = pd.concat(clean_dfs, ignore_index=True)
 
     # Write these values to a H5 file in the same folder
-    output_path = Path(path).parent / f'{Path(path).stem}_.afv.h5'
+    output_path = Path(path).parent / f'{Path(path).stem}.afv.h5'
     all_afv = all_afv.map(lambda x: np.nan if x is None else x)
     all_afv.to_hdf(output_path, key='afv', mode='w', format='table',
                                 data_columns=['uuid'])
